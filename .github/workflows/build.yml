@@ -7,26 +7,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build (e.g., 1.5.6)'
+        description: 'Version to build (e.g., 1.5.8)'
         required: true
-        default: '1.5.8'
+        default: '1.5.9'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.8' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.9' }}
 
 jobs:
   build-macos:
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        arch: [x86_64, aarch64]
-        include:
-          - arch: x86_64
-            runner: macos-13
-            rust-target: x86_64-apple-darwin
-          - arch: aarch64
-            runner: macos-latest
-            rust-target: aarch64-apple-darwin
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       
@@ -38,7 +28,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.rust-target }}
+          targets: aarch64-apple-darwin
           
       - name: Install Pake CLI
         run: npm install -g pake-cli
@@ -46,26 +36,23 @@ jobs:
       - name: Apply Chinese menu patch
         run: |
           echo "=== Locate pake-cli installation ==="
-          # 使用 npm root -g 获取全局 node_modules 路径（兼容所有架构）
           GLOBAL_NM=$(npm root -g)
           echo "Global node_modules: $GLOBAL_NM"
           MENU_FILE="$GLOBAL_NM/pake-cli/src-tauri/src/app/menu.rs"
           PATCH_FILE=".github/patches/menu.rs"
           echo "Target: $MENU_FILE"
-          echo "Patch source: $PATCH_FILE"
           echo "Original exists: $(test -f "$MENU_FILE" && echo YES || echo NO)"
           echo "Patch exists: $(test -f "$PATCH_FILE" && echo YES || echo NO)"
           if [ -f "$PATCH_FILE" ] && [ -f "$MENU_FILE" ]; then
             echo "=== Applying Chinese menu patch ==="
             cp "$PATCH_FILE" "$MENU_FILE"
             echo "Patch applied successfully"
-            echo "=== Verification (first 5 lines) ==="
-            head -5 "$MENU_FILE"
+            head -3 "$MENU_FILE"
           else
             echo "WARNING: Patch file or target not found. Using default menus."
           fi
         
-      - name: Build macOS DMG (${{ matrix.arch }})
+      - name: Build macOS DMG (universal)
         run: |
           pake index.html \
             --name 小排版 \
@@ -74,14 +61,26 @@ jobs:
             --width 1024 \
             --height 768 \
             --hide-title-bar \
+            --use-local-file \
+            --multi-arch \
+            --app-version ${{ env.APP_VERSION }} \
             -v
           
-      - name: Upload macOS DMG (${{ matrix.arch }})
+      - name: Locate and copy macOS artifacts
+        run: |
+          echo "=== Finding build artifacts ==="
+          PAKE_DIR=$(npm root -g)/pake-cli
+          mkdir -p output
+          find "$PAKE_DIR/src-tauri/target" -name "*.dmg" -type f 2>/dev/null
+          find "$PAKE_DIR/src-tauri/target" -name "*.dmg" -type f -exec cp -v {} output/ \; 2>/dev/null
+          echo "=== Files in output/ ==="
+          ls -la output/
+          
+      - name: Upload macOS DMGs
         uses: actions/upload-artifact@v4
         with:
-          name: macos-${{ matrix.arch }}-dmg
-          path: |
-            src-tauri/target/release/bundle/dmg/*.dmg
+          name: macos-dmg
+          path: output/*.dmg
 
   build-windows:
     runs-on: windows-latest
@@ -110,14 +109,27 @@ jobs:
             --icon icon.png `
             --width 1024 `
             --height 768 `
+            --use-local-file `
+            --app-version ${{ env.APP_VERSION }} `
             -v
+          
+      - name: Locate and copy Windows artifacts
+        shell: pwsh
+        run: |
+          echo "=== Finding build artifacts ==="
+          $PAKE_DIR = npm root -g
+          $PAKE_DIR = "$PAKE_DIR/pake-cli"
+          New-Item -ItemType Directory -Force -Path output
+          Get-ChildItem -Path "$PAKE_DIR/src-tauri/target" -Recurse -Filter "*.exe" -File | ForEach-Object { Copy-Item -Path $_.FullName -Destination "output/" -Verbose }
+          Get-ChildItem -Path "$PAKE_DIR/src-tauri/target" -Recurse -Filter "*.msix" -File | ForEach-Object { Copy-Item -Path $_.FullName -Destination "output/" -Verbose }
+          echo "=== Files in output/ ==="
+          Get-ChildItem -Path output/
           
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
         with:
           name: windows-x86_64-exe
-          path: |
-            src-tauri/target/release/bundle/nsis/*.exe
+          path: output/*
 
   build-linux:
     runs-on: ubuntu-latest
@@ -155,14 +167,27 @@ jobs:
             --icon icon.png \
             --width 1024 \
             --height 768 \
+            --use-local-file \
+            --app-version ${{ env.APP_VERSION }} \
             -v
+          
+      - name: Locate and copy Linux artifacts
+        run: |
+          echo "=== Finding build artifacts ==="
+          PAKE_DIR=$(npm root -g)/pake-cli
+          mkdir -p output
+          find "$PAKE_DIR/src-tauri/target" -name "*.deb" -type f 2>/dev/null
+          find "$PAKE_DIR/src-tauri/target" -name "*.deb" -type f -exec cp -v {} output/ \; 2>/dev/null
+          # Also find AppImage
+          find "$PAKE_DIR/src-tauri/target" -name "*.AppImage" -type f -exec cp -v {} output/ \; 2>/dev/null
+          echo "=== Files in output/ ==="
+          ls -la output/
           
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4
         with:
           name: linux-x86_64-deb
-          path: |
-            src-tauri/target/release/bundle/deb/*.deb
+          path: output/*
 
   create-release:
     needs: [build-macos, build-windows, build-linux]
@@ -179,14 +204,28 @@ jobs:
       - name: List downloaded artifacts
         run: find artifacts -type f | head -50
           
+      - name: Rename artifacts with consistent naming
+        run: |
+          # macOS DMGs
+          for f in artifacts/macos-dmg/*.dmg; do
+            basename=$(basename "$f")
+            # Extract arch from filename (*_aarch64.dmg or *_x64.dmg)
+            if echo "$basename" | grep -q "_aarch64"; then
+              mv "$f" "artifacts/macos-dmg/小排版_${{ env.APP_VERSION }}_aarch64.dmg"
+            elif echo "$basename" | grep -q "_x64"; then
+              mv "$f" "artifacts/macos-dmg/小排版_${{ env.APP_VERSION }}_x64.dmg"
+            fi
+          done
+          
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/macos-x86_64-dmg/*.dmg
-            artifacts/macos-aarch64-dmg/*.dmg
+            artifacts/macos-dmg/*.dmg
             artifacts/windows-x86_64-exe/*.exe
+            artifacts/windows-x86_64-exe/*.msix
             artifacts/linux-x86_64-deb/*.deb
+            artifacts/linux-x86_64-deb/*.AppImage
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

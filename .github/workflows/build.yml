@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build (e.g., 1.5.5)'
+        description: 'Version to build (e.g., 1.5.6)'
         required: true
-        default: '1.5.5'
+        default: '1.5.6'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.5' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.6' }}
 
 jobs:
   build-macos:
@@ -49,11 +49,58 @@ jobs:
           which pake
           pake --version
           echo "=== Patch target path ==="
-          PATCH_TARGET="$(dirname $(node -e "console.log(require.resolve('pake-cli'))"))/../src-tauri/src/app/menu.rs"
-          echo "Target: $PATCH_TARGET"
-          echo "Target exists before patch: $(test -f "$PATCH_TARGET" && echo YES || echo NO)"
-          cp -v .github/patches/menu.rs "$PATCH_TARGET"
-          echo "Patched successfully"
+          PAKE_DIR="$(dirname $(dirname $(node -e "console.log(require.resolve('pake-cli'))")))"
+          MENU_FILE="$PAKE_DIR/src-tauri/src/app/menu.rs"
+          echo "Target: $MENU_FILE"
+          echo "Exists before patch: $(test -f "$MENU_FILE" && echo YES || echo NO)"
+          echo "=== Applying sed patches ==="
+          # macOS 使用 BSD sed，需要空备份后缀
+          # 1. 汉化子菜单名称
+          sed -i '' 's/Submenu::new(app, "Edit")/Submenu::new(app, "编辑")/' "$MENU_FILE"
+          sed -i '' 's/let app_menu = Submenu::new(app, "Pake")/let app_menu = Submenu::new(app, "小排版")/' "$MENU_FILE"
+          sed -i '' 's/Submenu::new(app, "Help")/Submenu::new(app, "帮助")/' "$MENU_FILE"
+          # 2. 汉化 About 标签
+          sed -i '' 's/PredefinedMenuItem::about(app, Some("Pake")/PredefinedMenuItem::about(app, Some("关于 一键排版")/' "$MENU_FILE"
+          # 3. 汉化编辑菜单项标签
+          sed -i '' 's/PredefinedMenuItem::undo(app, None)/PredefinedMenuItem::undo(app, Some("撤销"))/' "$MENU_FILE"
+          sed -i '' 's/PredefinedMenuItem::redo(app, None)/PredefinedMenuItem::redo(app, Some("重做"))/' "$MENU_FILE"
+          sed -i '' 's/PredefinedMenuItem::cut(app, None)/PredefinedMenuItem::cut(app, Some("剪切"))/' "$MENU_FILE"
+          sed -i '' 's/PredefinedMenuItem::copy(app, None)/PredefinedMenuItem::copy(app, Some("复制"))/' "$MENU_FILE"
+          sed -i '' 's/PredefinedMenuItem::paste(app, None)/PredefinedMenuItem::paste(app, Some("粘贴"))/' "$MENU_FILE"
+          sed -i '' 's/PredefinedMenuItem::select_all(app, None)/PredefinedMenuItem::select_all(app, Some("全选"))/' "$MENU_FILE"
+          # 4. 移除自定义菜单项的多余标签
+          sed -i '' 's/"Paste and Match Style"/"粘贴并匹配样式"/' "$MENU_FILE"
+          sed -i '' 's/"Copy URL"/"复制链接"/' "$MENU_FILE"
+          sed -i '' 's/"Find"/"查找"/' "$MENU_FILE"
+          sed -i '' 's/"Find Next"/"查找下一个"/' "$MENU_FILE"
+          sed -i '' 's/"Find Previous"/"查找上一个"/' "$MENU_FILE"
+          # 5. 汉化应用菜单项
+          sed -i '' 's/PredefinedMenuItem::hide(app, None)/PredefinedMenuItem::hide(app, Some("隐藏"))/' "$MENU_FILE"
+          sed -i '' 's/PredefinedMenuItem::hide_others(app, None)/PredefinedMenuItem::hide_others(app, Some("隐藏其他"))/' "$MENU_FILE"
+          sed -i '' 's/PredefinedMenuItem::show_all(app, None)/PredefinedMenuItem::show_all(app, Some("显示全部"))/' "$MENU_FILE"
+          sed -i '' 's/PredefinedMenuItem::quit(app, None)/PredefinedMenuItem::quit(app, Some("退出"))/' "$MENU_FILE"
+          # 6. 汉化其他菜单
+          sed -i '' 's/Submenu::new(app, "File")/Submenu::new(app, "文件")/' "$MENU_FILE"
+          sed -i '' 's/Submenu::new(app, "View")/Submenu::new(app, "视图")/' "$MENU_FILE"
+          sed -i '' 's/Submenu::new(app, "Window")/Submenu::new(app, "窗口")/' "$MENU_FILE"
+          sed -i '' 's/"New Window"/"新建窗口"/' "$MENU_FILE"
+          sed -i '' 's/"Reload"/"重新加载"/' "$MENU_FILE"
+          sed -i '' 's/"Zoom In"/"放大"/' "$MENU_FILE"
+          sed -i '' 's/"Zoom Out"/"缩小"/' "$MENU_FILE"
+          sed -i '' 's/"Actual Size"/"原始大小"/' "$MENU_FILE"
+          sed -i '' 's/"Toggle Fullscreen"/"切换全屏"/' "$MENU_FILE"
+          sed -i '' 's/"Minimize"/"最小化"/' "$MENU_FILE"
+          sed -i '' 's/"Zoom"/"缩放"/' "$MENU_FILE"
+          sed -i '' 's/"Toggle Always on Top"/"窗口置顶"/' "$MENU_FILE"
+          sed -i '' 's/"Clear Cache & Restart"/"清除缓存并重启"/' "$MENU_FILE"
+          sed -i '' 's/"Close Window"/"关闭窗口"/' "$MENU_FILE"
+          sed -i '' 's/"Back"/"后退"/' "$MENU_FILE"
+          sed -i '' 's/"Forward"/"前进"/' "$MENU_FILE"
+          sed -i '' 's/"Go Home"/"首页"/' "$MENU_FILE"
+          echo "=== Patch result ==="
+          head -40 "$MENU_FILE"
+          echo "..."
+          grep -n "编辑\|撤销\|剪切\|复制\|粘贴\|全选\|关于\|退出" "$MENU_FILE"
         
       - name: Build macOS DMG (${{ matrix.arch }})
         run: |

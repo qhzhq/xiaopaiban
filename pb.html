@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一键排版 — 让文字呼吸</title>
+<meta name="description" content="一键排版，免费、离线、极简的文字排版工具。段落空行、缩进调整、全角半角转换，写作更专注。">
+<link rel="icon" type="image/png" href="favicon.ico">
+<style>
+/* ============================================
+   一键排版 — 产品展示页 v2
+   设计方向：精密暗色科技风 × 琥珀强调
+   反AI套路：无青紫渐变、无毛玻璃、无霓虹、无通用卡片阴影
+   ============================================ */
+
+/* ---------- FONTS ---------- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+}
+
+/* ---------- ROOT ---------- */
+:root {
+  /* Deep obsidian — never pure black */
+  --bg-base:       #08090f;
+  --bg-layer:      #0d0f17;
+  --bg-elevated:   #11131e;
+  --bg-card:       #151724;
+
+  /* Tinted neutrals */
+  --border-subtle: rgba(255,255,255,0.05);
+  --border-dim:    rgba(255,255,255,0.08);
+  --border-mid:    rgba(255,255,255,0.12);
+
+  /* Text hierarchy */
+  --text-primary:  #e8e8f0;
+  --text-secondary:#9595a8;
+  --text-tertiary: #5e5e72;
+
+  /* Amber accent — warm precision, not cyan */
+  --accent:        #e8a840;
+  --accent-bright: #f5c05a;
+  --accent-deep:   #c48520;
+  --accent-glow:   rgba(232,168,64,0.12);
+
+  /* Spacing scale */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.75rem;
+  --space-lg: 3rem;
+  --space-xl: 5rem;
+  --space-2xl:8rem;
+
+  /* Typography */
+  --font-display: 'Inter', -apple-system, 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  --font-body:    -apple-system, 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- RESET ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.65;
+  overflow-x: hidden;
+  --parallax-y: 0px;
+}
+
+/* ---------- GLOBAL TEXTURE ---------- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 36px 36px;
+  transition: background-position 0.6s ease-out;
+}
+
+/* Cursor glow — follows mouse, very subtle */
+.cursor-glow {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,168,64,0.06) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.cursor-glow.active {
+  opacity: 1;
+}
+
+/* ---------- TYPOGRAPHY ---------- */
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; letter-spacing: -0.02em; }
+h1 { font-size: clamp(3rem, 7vw, 6.5rem); font-weight: 700; }
+h2 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 600; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+
+::selection { background: rgba(232,168,64,0.35); color: #fff; }
+
+a { color: var(--accent); text-decoration: none; transition: color var(--transition); }
+a:hover { color: var(--accent-bright); }
+
+/* ---------- LAYOUT ---------- */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 max(1.5rem, 4vw);
+}
+
+.section-pad {
+  padding: var(--space-xl) 0;
+}
+
+/* ---------- NAVIGATION ---------- */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 1rem max(1.5rem, 4vw);
+  transition: background var(--transition), backdrop-filter var(--transition);
+}
+.nav.scrolled {
+  background: rgba(8,9,15,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nav-brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+}
+.nav-version {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+.nav-link {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.nav-link:hover {
+  color: var(--accent);
+}
+.nav-link-highlight {
+  color: var(--accent);
+  font-weight: 600;
+  position: relative;
+}
+.nav-link-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: var(--accent);
+  opacity: 0.5;
+  transition: opacity var(--transition);
+}
+.nav-link-highlight:hover::after {
+  opacity: 1;
+}
+.nav-cta {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 1.2rem;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-body);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.nav-cta:hover {
+  background: var(--accent);
+  color: var(--bg-base);
+}
+
+/* ---------- HERO ---------- */
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 95vh;
+  display: flex;
+  align-items: center;
+  padding-top: 4rem;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-xl);
+  align-items: center;
+}
+.hero-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  margin-bottom: var(--space-sm);
+  font-family: var(--font-display);
+}
+.hero h1 {
+  margin-bottom: var(--space-sm);
+  max-width: 800px;
+}
+.hero h1 .accent-word {
+  color: var(--accent);
+  position: relative;
+}
+.hero h1 .accent-word::after {
+  content: '';
+  position: absolute;
+  bottom: 0.08em;
+  left: 0;
+  width: 100%;
+  height: 0.15em;
+  background: var(--accent);
+  opacity: 0.3;
+  border-radius: 1px;
+}
+.hero-sub {
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  color: var(--text-secondary);
+  max-width: 520px;
+  line-height: 1.8;
+  margin-bottom: var(--space-lg);
+}
+.hero-divider {
+  width: 3.5rem;
+  height: 2px;
+  background: var(--accent);
+  margin-bottom: var(--space-md);
+  opacity: 0.7;
+}
+
+/* Stats row */
+.stats-row {
+  display: flex;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+.stat-item {
+  min-width: 80px;
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.03em;
+}
+.stat-num { display: inline; }
+.stat-prefix {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+.stat-suffix {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+.stat-label {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* Scroll hint */
+.scroll-indicator {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  opacity: 0.4;
+  animation: floatDown 2s ease-in-out infinite;
+}
+.scroll-indicator span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-tertiary);
+}
+.scroll-line {
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(to bottom, var(--text-tertiary), transparent);
+}
+@keyframes floatDown {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ---------- SECTION HEADERS ---------- */
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  margin-bottom: var(--space-xs);
+  font-family: var(--font-display);
+}
+.section-title {
+  margin-bottom: var(--space-sm);
+}
+.section-desc {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 560px;
+  line-height: 1.75;
+  margin-bottom: var(--space-lg);
+}
+
+/* ---------- FEATURES ---------- */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.feature-cell {
+  background: var(--bg-elevated);
+  padding: var(--space-md);
+  transition: background var(--transition);
+  position: relative;
+}
+.feature-cell:hover {
+  background: var(--bg-card);
+}
+.feature-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-glow);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  margin-bottom: var(--space-sm);
+  font-weight: 700;
+}
+.feature-cell h3 {
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+.feature-cell p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* ---------- STEPS ---------- */
+.steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.step-cell {
+  background: var(--bg-elevated);
+  padding: var(--space-md);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.step-num {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.04);
+  line-height: 1;
+  margin-bottom: var(--space-sm);
+}
+.step-cell h3 {
+  margin-bottom: 0.35rem;
+}
+.step-cell p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* ---------- DOWNLOADS ---------- */
+.dl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.dl-card {
+  background: var(--bg-elevated);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+}
+.dl-platform {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: var(--space-sm);
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: var(--font-display);
+}
+.dl-platform svg {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+.dl-arch-row {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: var(--space-sm);
+  flex-wrap: wrap;
+}
+.dl-arch-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  border: 1px solid var(--border-dim);
+}
+.dl-arch-badge.current {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border-color: rgba(232,168,64,0.2);
+}
+.dl-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: auto;
+}
+.dl-btn {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  text-align: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+.dl-btn.outline {
+  background: transparent;
+  border: 1.5px solid var(--border-mid);
+  color: var(--text-secondary);
+}
+.dl-btn.outline:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+.dl-btn.primary {
+  background: var(--accent);
+  border: 1.5px solid var(--accent);
+  color: var(--bg-base);
+}
+.dl-btn.primary:hover {
+  background: var(--accent-bright);
+  border-color: var(--accent-bright);
+}
+.dl-size {
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+  margin-left: 0.3rem;
+  font-weight: 400;
+}
+.dl-note {
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  line-height: 1.7;
+}
+.dl-note code {
+  background: var(--bg-card);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.78rem;
+  color: var(--accent);
+}
+
+/* ---------- BADGE SECTION ---------- */
+.badge-row {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-md);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border-dim);
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+}
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ---------- FOOTER ---------- */
+.footer {
+  border-top: 1px solid var(--border-subtle);
+  padding: var(--space-lg) 0;
+  text-align: center;
+}
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 max(1.5rem, 4vw);
+}
+.footer-brand {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.footer-author {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.3rem;
+}
+.footer-author strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.footer-links {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  margin: var(--space-sm) 0;
+}
+.footer-link {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  transition: color var(--transition);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+.footer-link:hover {
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+.footer-copy {
+  margin-top: var(--space-sm);
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+/* ---------- REVEAL ANIMATIONS ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.05s; }
+.reveal-delay-2 { transition-delay: 0.12s; }
+.reveal-delay-3 { transition-delay: 0.19s; }
+.reveal-delay-4 { transition-delay: 0.26s; }
+
+/* ---------- DYNAMIC EFFECTS ---------- */
+
+/* Accent word — shimmer gradient animation */
+.hero h1 .accent-word {
+  background: linear-gradient(120deg, var(--accent) 0%, var(--accent-bright) 30%, #ffe0a0 50%, var(--accent-bright) 70%, var(--accent) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s ease-in-out infinite;
+}
+.hero h1 .accent-word::after {
+  -webkit-text-fill-color: initial;
+}
+@keyframes shimmer {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 200% center; }
+}
+
+/* Badge dot — subtle pulse */
+.badge-dot {
+  animation: dotPulse 2.5s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+/* Primary download button — breathing glow */
+.dl-btn.primary {
+  position: relative;
+  overflow: visible;
+}
+.dl-btn.primary::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: calc(var(--radius-sm) + 3px);
+  background: var(--accent);
+  z-index: -1;
+  opacity: 0;
+  animation: btnBreath 3s ease-in-out infinite;
+}
+@keyframes btnBreath {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.04); filter: blur(8px); }
+}
+
+/* Feature cell — perspective tilt container */
+.feature-cell {
+  transform-style: preserve-3d;
+  perspective: 800px;
+  transition: background var(--transition), transform 0.1s ease-out;
+}
+.feature-icon, .feature-cell h3, .feature-cell p {
+  transform: translateZ(0);
+  transition: transform 0.1s ease-out;
+}
+
+/* Step cell — reveal progress bar on hover */
+.step-cell {
+  overflow: hidden;
+}
+.step-cell::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.step-cell:hover::before {
+  transform: translateX(0);
+}
+
+/* Scroll indicator — fade out on scroll */
+.scroll-indicator {
+  transition: opacity 0.4s ease;
+}
+
+/* Parallax — subtle section background shift */
+@media (prefers-reduced-motion: no-preference) {
+  .hero {
+    transition: background-position 0.1s linear;
+  }
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 900px) {
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .dl-grid { grid-template-columns: repeat(2, 1fr); }
+  .steps-row { grid-template-columns: 1fr; }
+  .hero { min-height: auto; padding: 8rem 0 var(--space-xl); }
+}
+@media (max-width: 560px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .dl-grid { grid-template-columns: 1fr; }
+  .stats-row { gap: var(--space-md); }
+  .hero h1 { font-size: clamp(2.2rem, 10vw, 3.5rem); }
+  .section-pad { padding: var(--space-lg) 0; }
+  .nav-cta { font-size: 0.75rem; padding: 0.35rem 0.9rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Cursor glow element -->
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<!-- ============ NAVIGATION ============ -->
+<nav class="nav" id="navbar">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <img class="nav-brand-logo" src="images/logo.png" alt="一键排版">
+      一键排版
+      <span class="nav-version">v1.0</span>
+    </div>
+    <div class="nav-links">
+      <a href="#features" class="nav-link">核心能力</a>
+      <a href="#how-it-works" class="nav-link">使用流程</a>
+      <a href="http://hulian.pro" class="nav-link nav-link-highlight" target="_blank" rel="noopener noreferrer">访问作者主页</a>
+      <a href="#downloads" class="nav-cta" onclick="document.getElementById('downloads').scrollIntoView({behavior:'smooth'});return false">下载客户端</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container">
+    <div class="reveal">
+      <p class="hero-eyebrow">桌面文字排版工具</p>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <h1>让文字<span class="accent-word">呼吸</span></h1>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <p class="hero-sub">粘贴进来，一键搞定——段落间距、缩进校对、全角半角转换，全都在本地完成，永远不上传你的文字。</p>
+    </div>
+    <div class="reveal reveal-delay-3">
+      <div class="hero-divider"></div>
+    </div>
+    <div class="reveal reveal-delay-4">
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-value"><span class="stat-num" data-target="0" data-suffix="ms">0</span></div>
+          <div class="stat-label">排版延迟</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value"><span class="stat-prefix">&lt;</span><span class="stat-num" data-target="5" data-suffix=" x">0</span></div>
+          <div class="stat-label">零学习成本</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value"><span class="stat-num" data-target="3">0</span></div>
+          <div class="stat-label">平台全覆盖</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value"><span class="stat-num" data-target="100" data-suffix="%">0</span></div>
+          <div class="stat-label">完全离线</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-indicator" aria-hidden="true">
+    <span>向下浏览</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ============ PRIVACY BADGES ============ -->
+<section class="section-pad" style="padding-bottom:0">
+  <div class="container">
+    <div class="reveal">
+      <div class="badge-row">
+        <div class="badge"><span class="badge-dot"></span>无需联网</div>
+        <div class="badge"><span class="badge-dot"></span>不收集数据</div>
+        <div class="badge"><span class="badge-dot"></span>纯本地处理</div>
+        <div class="badge"><span class="badge-dot"></span>零隐私风险</div>
+        <div class="badge"><span class="badge-dot"></span>全局快捷键</div>
+        <div class="badge"><span class="badge-dot"></span>跨平台统一体验</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="section-pad" id="features">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">核心能力</p>
+      <h2 class="section-title">六项精密排版能力</h2>
+      <p class="section-desc">每一项都经过数百篇文稿测试，确保输出符合中文排版最佳实践。</p>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="features-grid">
+        <div class="feature-cell">
+          <div class="feature-icon">¶</div>
+          <h3>段落智能空行</h3>
+          <p>自动识别自然段边界，按小说投稿、公众号、论文等场景预设段落间距，无需手动调节。</p>
+        </div>
+        <div class="feature-cell">
+          <div class="feature-icon">⇥</div>
+          <h3>缩进一键统一</h3>
+          <p>文本缩进、全角缩进或不缩进——三种模式自由切换，告别逐个敲空格。</p>
+        </div>
+        <div class="feature-cell">
+          <div class="feature-icon">Aa</div>
+          <h3>全角半角转换</h3>
+          <p>中文全角、英文半角或智能混排，标点、数字、字母统一规则，杜绝混用错误。</p>
+        </div>
+        <div class="feature-cell">
+          <div class="feature-icon">⟷</div>
+          <h3>中英文混排优化</h3>
+          <p>自动在中英文、数字与中文之间插入适量空格，符合 W3C 中文排版规范。</p>
+        </div>
+        <div class="feature-cell">
+          <div class="feature-icon">⊘</div>
+          <h3>纯离线引擎</h3>
+          <p>100% 本地运算，不传数据、不上传、不收集隐私。你的文字永远只属于你。</p>
+        </div>
+        <div class="feature-cell">
+          <div class="feature-icon">⌘</div>
+          <h3>全局快捷键</h3>
+          <p>macOS 按 ⌘G 即时排版，无需离开当前窗口。支持波浪线检测、标点修正等附加入能力。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="section-pad" id="how-it-works">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">使用流程</p>
+      <h2 class="section-title">三步，零学习成本</h2>
+      <p class="section-desc">打开即用，无需注册、无需配置、无需看文档。</p>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="steps-row">
+        <div class="step-cell">
+          <div class="step-num">01</div>
+          <h3>粘贴文本</h3>
+          <p>把文章、小说、笔记或论文粘贴到编辑区，也支持直接拖入 .txt 文件。</p>
+        </div>
+        <div class="step-cell">
+          <div class="step-num">02</div>
+          <h3>选择规则</h3>
+          <p>点击排版设置，选择段落模式、缩进方式和全角半角偏好，或用预设一键配置。</p>
+        </div>
+        <div class="step-cell">
+          <div class="step-num">03</div>
+          <h3>一键排版</h3>
+          <p>按 ⌘G（或点击排版按钮），结果即刻呈现。可选"排版后直接复制"省去手动选中。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DOWNLOADS ============ -->
+<section class="section-pad" id="downloads">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">获取客户端</p>
+      <h2 class="section-title">选择你的平台</h2>
+      <p class="section-desc">桌面客户端原生离线，比网页版更快更稳定。免费、无广告、无数据收集。</p>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="dl-grid">
+
+        <!-- macOS Intel -->
+        <div class="dl-card">
+          <div class="dl-platform">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.5 0-3 .5-4 2-1.8 2.7-1 6.5 1 9 .5.6 1.2 1 2 1h2c.8 0 1.5-.4 2-1 2-2.5 2.8-6.3 1-9-1-1.5-2.5-2-4-2z"/><path d="M8 17c-1 .8-1.5 2-1 3 .3.7 1 1 2 1h6c1 0 1.7-.3 2-1 .5-1 0-2.2-1-3"/></svg>
+            macOS Intel
+          </div>
+          <div class="dl-arch-row">
+            <span class="dl-arch-badge current">x64</span>
+            <span class="dl-arch-badge">Intel芯片</span>
+          </div>
+          <div class="dl-buttons">
+            <a class="dl-btn primary" href="https://1819573196.share.123865.com/123pan/bAlQjv-pwf5" target="_blank" rel="noopener noreferrer">
+              下载 DMG<span class="dl-size">102MB</span>
+            </a>
+            <a class="dl-btn outline" href="https://1819573196.share.123865.com/123pan/bAlQjv-KI8L" target="_blank" rel="noopener noreferrer">
+              下载 ZIP<span class="dl-size">101MB</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- macOS Apple Silicon -->
+        <div class="dl-card">
+          <div class="dl-platform">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-1.5 0-3 .5-4 2-1.8 2.7-1 6.5 1 9 .5.6 1.2 1 2 1h2c.8 0 1.5-.4 2-1 2-2.5 2.8-6.3 1-9-1-1.5-2.5-2-4-2z"/><path d="M8 17c-1 .8-1.5 2-1 3 .3.7 1 1 2 1h6c1 0 1.7-.3 2-1 .5-1 0-2.2-1-3"/></svg>
+            macOS Silicon
+          </div>
+          <div class="dl-arch-row">
+            <span class="dl-arch-badge current">arm64</span>
+            <span class="dl-arch-badge">M1/M2/M3/M4</span>
+          </div>
+          <div class="dl-buttons">
+            <a class="dl-btn primary" href="https://1819573196.share.123865.com/123pan/bAlQjv-cWsL" target="_blank" rel="noopener noreferrer">
+              下载 DMG<span class="dl-size">98MB</span>
+            </a>
+            <a class="dl-btn outline" href="https://1819573196.share.123865.com/123pan/bAlQjv-JNE5" target="_blank" rel="noopener noreferrer">
+              下载 ZIP<span class="dl-size">96MB</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Windows -->
+        <div class="dl-card">
+          <div class="dl-platform">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="7" rx="1"/><rect x="13" y="4" width="8" height="7" rx="1"/><rect x="3" y="13" width="8" height="7" rx="1"/><rect x="13" y="13" width="8" height="7" rx="1"/></svg>
+            Windows
+          </div>
+          <div class="dl-arch-row">
+            <span class="dl-arch-badge current">x64</span>
+            <span class="dl-arch-badge">Windows 10+</span>
+          </div>
+          <div class="dl-buttons">
+            <a class="dl-btn primary" href="https://1819573196.share.123pan.cn/123pan/bAlQjv-zEbL" target="_blank" rel="noopener noreferrer">
+              下载安装程序<span class="dl-size">78MB</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Linux -->
+        <div class="dl-card">
+          <div class="dl-platform">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M7 14c1.5 1.5 6 2 10 0"/><circle cx="9" cy="8" r="1.5"/><circle cx="15" cy="8" r="1.5"/></svg>
+            Linux
+          </div>
+          <div class="dl-arch-row">
+            <span class="dl-arch-badge current">x64</span>
+            <span class="dl-arch-badge">AppImage</span>
+          </div>
+          <div class="dl-buttons">
+            <a class="dl-btn primary" href="https://1819573196.share.123865.com/123pan/bAlQjv-0I8L" target="_blank" rel="noopener noreferrer">
+              下载 AppImage<span class="dl-size">105MB</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="reveal reveal-delay-3">
+      <div class="dl-note">
+        <strong>macOS 首次使用：</strong>右键 DMG 中的 App → 打开；或终端执行 <code>xattr -cr /Applications/一键排版.app</code><br>
+        <strong>Linux：</strong>下载后 <code>chmod +x 一键排版-*.AppImage</code> 即可运行
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">一键排版</div>
+    <p class="footer-author">软件作者：<strong>静候美好</strong></p>
+    <div class="footer-links">
+      <a href="https://qm.qq.com/q/15uUXfhdbu" target="_blank" rel="noopener" class="footer-link">QQ交流群：874909613</a>
+    </div>
+    <p class="footer-copy">© 2026 一键排版 · 完全离线 · 无需联网 · 不收集任何数据</p>
+  </div>
+</footer>
+
+<!-- ============ SCRIPTS ============ -->
+<script>
+// ── Nav scroll effect ──
+const nav = document.getElementById('navbar');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  nav.classList.toggle('scrolled', y > 60);
+  lastScroll = y;
+}, { passive: true });
+
+// ── Cursor glow tracking ──
+const glow = document.getElementById('cursorGlow');
+let glowX = 0, glowY = 0, currentX = 0, currentY = 0;
+let glowActive = false;
+
+document.addEventListener('mousemove', (e) => {
+  glowX = e.clientX;
+  glowY = e.clientY;
+  if (!glowActive) {
+    glowActive = true;
+    glow.classList.add('active');
+  }
+}, { passive: true });
+
+document.addEventListener('mouseleave', () => {
+  glowActive = false;
+  glow.classList.remove('active');
+});
+
+function animateGlow() {
+  currentX += (glowX - currentX) * 0.08;
+  currentY += (glowY - currentY) * 0.08;
+  glow.style.left = currentX + 'px';
+  glow.style.top = currentY + 'px';
+  requestAnimationFrame(animateGlow);
+}
+animateGlow();
+
+// ── Stat counter animation ──
+function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const nums = entry.target.querySelectorAll('.stat-num');
+    nums.forEach(el => {
+      const target = parseInt(el.dataset.target, 10);
+      const suffix = el.dataset.suffix || '';
+      const duration = 1200;
+      const start = performance.now();
+
+      function tick(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = easeOutExpo(progress);
+        const current = Math.round(target * eased);
+        el.textContent = current + suffix;
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+    counterObserver.unobserve(entry.target);
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('.stats-row').forEach(el => counterObserver.observe(el));
+
+// ── Feature card 3D tilt ──
+document.querySelectorAll('.feature-cell').forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -5;
+    const rotateY = ((x - centerX) / centerX) * 5;
+    card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+
+    const icon = card.querySelector('.feature-icon');
+    const h3 = card.querySelector('h3');
+    const p = card.querySelector('p');
+    if (icon) icon.style.transform = `translateZ(15px)`;
+    if (h3) h3.style.transform = `translateZ(10px)`;
+    if (p) p.style.transform = `translateZ(5px)`;
+  });
+
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg)';
+    const icon = card.querySelector('.feature-icon');
+    const h3 = card.querySelector('h3');
+    const p = card.querySelector('p');
+    if (icon) icon.style.transform = 'translateZ(0)';
+    if (h3) h3.style.transform = 'translateZ(0)';
+    if (p) p.style.transform = 'translateZ(0)';
+  });
+});
+
+// ── Scroll indicator fade ──
+const scrollHint = document.querySelector('.scroll-indicator');
+if (scrollHint) {
+  window.addEventListener('scroll', () => {
+    const opacity = Math.max(0, 1 - window.scrollY / 400);
+    scrollHint.style.opacity = opacity;
+  }, { passive: true });
+}
+
+// ── Parallax background dots ──
+const bodyBefore = document.querySelector('body');
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  bodyBefore.style.setProperty('--parallax-y', (y * 0.03) + 'px');
+}, { passive: true });
+
+// Update the body::before background position via a style element
+const parallaxStyle = document.createElement('style');
+parallaxStyle.textContent = `
+  body::before {
+    background-position: 0 var(--parallax-y, 0px);
+  }
+`;
+document.head.appendChild(parallaxStyle);
+
+// ── Scroll reveal ──
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+</script>
+
+</body>
+</html>

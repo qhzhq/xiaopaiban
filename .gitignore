@@ -1,0 +1,41 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 构建输出
+dist/
+pake-build/
+pake-build/target/
+pake-build/node_modules/
+
+# 之前的构架（旧版本构建产物）
+之前的构架/
+
+# 构建日志
+build.log
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# Electron builder 输出
+*.dmg
+*.AppImage
+*.exe
+*.deb
+*.rpm
+*.snap
+*-unpacked/
+
+# Pake 缓存
+.cargo/

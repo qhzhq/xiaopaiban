@@ -1,0 +1,13 @@
+{
+  "url": "index.html",
+  "name": "小排版",
+  "identifier": "pro.hulian.pb",
+  "icon": "icon.png",
+  "width": 1024,
+  "height": 768,
+  "useLocalFile": true,
+  "hideTitleBar": false,
+  "fullscreen": false,
+  "multiArch": true,
+  "appVersion": "1.5.1"
+}

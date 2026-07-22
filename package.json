@@ -1,0 +1,116 @@
+{
+  "name": "小排版",
+  "version": "1.5.1",
+  "description": "一键排版工具 - 文字排版、在线排版、文字自动排版",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder -mwl",
+    "build:mac": "electron-builder -m",
+    "build:win": "electron-builder -w",
+    "build:linux": "electron-builder -l",
+    "pake:mac": "./build-pake.sh mac",
+    "pake:mac:universal": "./build-pake.sh mac universal",
+    "pake:win": "./build-pake.sh win",
+    "pake:linux": "./build-pake.sh linux",
+    "pake:all": "./build-pake.sh all"
+  },
+  "build": {
+    "appId": "pro.hulian.pb",
+    "productName": "小排版",
+    "copyright": "Copyright © 2026",
+    "electronVersion": "34.2.0",
+    "npmRebuild": false,
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "win": {
+      "icon": "icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "icon.png",
+      "category": "Office",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "小排版"
+    },
+    "dmg": {
+      "title": "小排版",
+      "icon": "icon.icns",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "files": [
+      "index.html",
+      "main.js",
+      "package.json",
+      "favicon.ico",
+      "icon.png",
+      "icon.icns",
+      "icon.ico",
+      "Images/**/*",
+      "js/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": []
+  },
+  "homepage": "https://hulian.pro",
+  "keywords": ["文字排版", "排版工具", "一键排版"],
+  "author": "静候美好 <hulian.pro>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/你的用户名/排版助手.git"
+  },
+  "bugs": {
+    "url": "https://github.com/你的用户名/排版助手/issues"
+  },
+  "devDependencies": {
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}

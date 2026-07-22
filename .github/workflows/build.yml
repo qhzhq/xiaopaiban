@@ -64,9 +64,6 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        arch: [x86_64, aarch64]
     steps:
       - uses: actions/checkout@v4
       
@@ -78,8 +75,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: |
-            ${{ matrix.arch }}-pc-windows-msvc
+          targets: x86_64-pc-windows-msvc
           
       - name: Install Pake CLI
         run: npm install -g pake-cli
@@ -92,34 +88,31 @@ jobs:
           Copy-Item -Recurse Images -Destination pake-build\Images
           Copy-Item -Recurse js -Destination pake-build\js
           
-      - name: Build Windows EXE (${{ matrix.arch }})
+      - name: Build Windows EXE
         working-directory: pake-build
         run: pake --config pake.json --targets nsis
           
-      - name: Build Windows MSIX (${{ matrix.arch }})
+      - name: Build Windows MSIX
         working-directory: pake-build
         run: pake --config pake.json --targets msix
           
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
         with:
-          name: windows-${{ matrix.arch }}-exe
+          name: windows-x86_64-exe
           path: |
             pake-build/target/release/bundle/nsis/*.exe
             
       - name: Upload Windows MSIX
         uses: actions/upload-artifact@v4
         with:
-          name: windows-${{ matrix.arch }}-msix
+          name: windows-x86_64-msix
           path: |
             pake-build/target/release/bundle/msix/*.msix
             pake-build/target/release/bundle/msix/*.msixupload
 
   build-linux:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        arch: [x86_64, aarch64]
     steps:
       - uses: actions/checkout@v4
       
@@ -131,7 +124,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.arch }}-unknown-linux-gnu
+          targets: x86_64-unknown-linux-gnu
           
       - name: Install dependencies
         run: |
@@ -149,18 +142,18 @@ jobs:
       - name: Prepare build files
         run: |
           mkdir -p pake-build
-          cp index.html main.js favicon.ico icon.png pake.json pake-build/
+          cp index.html main.js favicon.ico icon.png icon.icns pake.json pake-build/
           cp -r Images pake-build/
           cp -r js pake-build/
           
-      - name: Build Linux DEB (${{ matrix.arch }})
+      - name: Build Linux DEB
         working-directory: pake-build
         run: pake --config pake.json --targets deb
           
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4
         with:
-          name: linux-${{ matrix.arch }}-deb
+          name: linux-x86_64-deb
           path: |
             pake-build/target/release/bundle/deb/*.deb
 
@@ -182,10 +175,10 @@ jobs:
           files: |
             artifacts/macos-x86_64-dmg/*.dmg
             artifacts/macos-aarch64-dmg/*.dmg
-            artifacts/**/*.exe
-            artifacts/**/*.msix
-            artifacts/**/*.msixupload
-            artifacts/**/*.deb
+            artifacts/windows-x86_64-exe/*.exe
+            artifacts/windows-x86_64-msix/*.msix
+            artifacts/windows-x86_64-msix/*.msixupload
+            artifacts/linux-x86_64-deb/*.deb
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

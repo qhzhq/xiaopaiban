@@ -83,7 +83,6 @@
 | 架构 | 格式 | 下载 |
 |:---|:---|:---|
 | x64 | DEB | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.1_amd64.deb) |
-| ARM64 | DEB | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.1_arm64.deb) |
 
 > 所有安装包均通过 GitHub Actions 自动构建，也可前往 [GitHub Releases](https://github.com/qhzhq/xiaopaiban/releases) 查看全部版本。
 

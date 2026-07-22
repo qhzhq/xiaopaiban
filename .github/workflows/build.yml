@@ -12,7 +12,7 @@ on:
         default: '1.5.1'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.2' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.3' }}
 
 jobs:
   build-macos:

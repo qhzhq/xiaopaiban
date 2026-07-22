@@ -9,10 +9,10 @@ on:
       version:
         description: 'Version to build (e.g., 1.5.8)'
         required: true
-        default: '1.5.9'
+        default: '1.5.10'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.9' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.10' }}
 
 jobs:
   build-macos:
@@ -69,12 +69,23 @@ jobs:
       - name: Locate and copy macOS artifacts
         run: |
           echo "=== Finding build artifacts ==="
-          PAKE_DIR=$(npm root -g)/pake-cli
           mkdir -p output
-          find "$PAKE_DIR/src-tauri/target" -name "*.dmg" -type f 2>/dev/null
-          find "$PAKE_DIR/src-tauri/target" -name "*.dmg" -type f -exec cp -v {} output/ \; 2>/dev/null
+          # pake v3.x 在临时目录构建，产物不在 npm 安装目录
+          # 全局搜索 .dmg，按修改时间排序
+          echo "--- Searching for DMG files ---"
+          FOUND=$(find /tmp "$HOME" "$(npm root -g)" -maxdepth 8 -name "*.dmg" -type f ! -path "*/node_modules/*" 2>/dev/null)
+          if [ -n "$FOUND" ]; then
+            echo "$FOUND" | while read f; do
+              echo "Found: $f"
+              cp -v "$f" output/
+            done
+          else
+            echo "ERROR: No DMG files found!"
+          fi
           echo "=== Files in output/ ==="
-          ls -la output/
+          ls -laR output/
+          # 确保至少有一个 dmg 文件
+          test -n "$(ls -A output/ 2>/dev/null)" || { echo "FATAL: No artifacts found in output/"; exit 1; }
           
       - name: Upload macOS DMGs
         uses: actions/upload-artifact@v4
@@ -117,13 +128,24 @@ jobs:
         shell: pwsh
         run: |
           echo "=== Finding build artifacts ==="
-          $PAKE_DIR = npm root -g
-          $PAKE_DIR = "$PAKE_DIR/pake-cli"
           New-Item -ItemType Directory -Force -Path output
-          Get-ChildItem -Path "$PAKE_DIR/src-tauri/target" -Recurse -Filter "*.exe" -File | ForEach-Object { Copy-Item -Path $_.FullName -Destination "output/" -Verbose }
-          Get-ChildItem -Path "$PAKE_DIR/src-tauri/target" -Recurse -Filter "*.msix" -File | ForEach-Object { Copy-Item -Path $_.FullName -Destination "output/" -Verbose }
+          $PAKE_DIR = "$(npm root -g)/pake-cli"
+          $TEMP_DIR = $env:TEMP
+          @($PAKE_DIR, "$HOME", $TEMP_DIR) | ForEach-Object {
+            $searchPath = $_
+            Write-Host "Searching in: $searchPath"
+            Get-ChildItem -Path $searchPath -Recurse -Filter "*.exe" -File -ErrorAction SilentlyContinue | ForEach-Object { 
+              Write-Host "Found EXE: $($_.FullName)"
+              Copy-Item -Path $_.FullName -Destination "output/" -Verbose 
+            }
+            Get-ChildItem -Path $searchPath -Recurse -Filter "*.msix" -File -ErrorAction SilentlyContinue | ForEach-Object { 
+              Write-Host "Found MSIX: $($_.FullName)"
+              Copy-Item -Path $_.FullName -Destination "output/" -Verbose 
+            }
+          }
           echo "=== Files in output/ ==="
           Get-ChildItem -Path output/
+          if (-not (Get-ChildItem -Path output/)) { Write-Error "FATAL: No artifacts found"; exit 1 }
           
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
@@ -174,14 +196,21 @@ jobs:
       - name: Locate and copy Linux artifacts
         run: |
           echo "=== Finding build artifacts ==="
-          PAKE_DIR=$(npm root -g)/pake-cli
           mkdir -p output
-          find "$PAKE_DIR/src-tauri/target" -name "*.deb" -type f 2>/dev/null
-          find "$PAKE_DIR/src-tauri/target" -name "*.deb" -type f -exec cp -v {} output/ \; 2>/dev/null
-          # Also find AppImage
-          find "$PAKE_DIR/src-tauri/target" -name "*.AppImage" -type f -exec cp -v {} output/ \; 2>/dev/null
+          # pake v3.x 在临时目录构建，产物不在 npm 安装目录
+          echo "--- Searching for DEB/AppImage files ---"
+          FOUND=$(find /tmp "$HOME" "$(npm root -g)" -maxdepth 8 \( -name "*.deb" -o -name "*.AppImage" \) -type f ! -path "*/node_modules/*" 2>/dev/null)
+          if [ -n "$FOUND" ]; then
+            echo "$FOUND" | while read f; do
+              echo "Found: $f"
+              cp -v "$f" output/
+            done
+          else
+            echo "ERROR: No DEB or AppImage files found!"
+          fi
           echo "=== Files in output/ ==="
-          ls -la output/
+          ls -laR output/
+          test -n "$(ls -A output/ 2>/dev/null)" || { echo "FATAL: No artifacts found in output/"; exit 1; }
           
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4

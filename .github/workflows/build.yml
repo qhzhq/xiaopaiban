@@ -7,162 +7,141 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build (e.g., 1.5.8)'
+        description: 'Version to build (e.g., 1.5.13)'
         required: true
-        default: '1.5.12'
+        default: '1.5.13'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.12' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.13' }}
 
 jobs:
   build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          
+          node-version: '20'
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
-          
+
       - name: Install Pake CLI
         run: npm install -g pake-cli
-        
+
       - name: Apply Chinese menu patch
         run: |
-          echo "=== Locate pake-cli installation ==="
           GLOBAL_NM=$(npm root -g)
-          echo "Global node_modules: $GLOBAL_NM"
           MENU_FILE="$GLOBAL_NM/pake-cli/src-tauri/src/app/menu.rs"
           PATCH_FILE=".github/patches/menu.rs"
-          echo "Target: $MENU_FILE"
-          echo "Original exists: $(test -f "$MENU_FILE" && echo YES || echo NO)"
-          echo "Patch exists: $(test -f "$PATCH_FILE" && echo YES || echo NO)"
           if [ -f "$PATCH_FILE" ] && [ -f "$MENU_FILE" ]; then
-            echo "=== Applying Chinese menu patch ==="
             cp "$PATCH_FILE" "$MENU_FILE"
-            echo "Patch applied successfully"
-            head -3 "$MENU_FILE"
+            echo "Menu patch applied"
           else
-            echo "WARNING: Patch file or target not found. Using default menus."
+            echo "WARNING: Cannot apply menu patch, continuing..."
           fi
-        
+
+      - name: Prepare build files
+        run: |
+          mkdir -p pake-build
+          cp index.html main.js favicon.ico icon.png icon.icns pake-build/ 2>/dev/null || true
+          cp pake.json pake-build/
+          cp -r Images pake-build/
+          cp -r js pake-build/
+
       - name: Build macOS DMG (universal)
-        run: |
-          pake index.html \
-            --name 小排版 \
-            --targets dmg \
-            --icon icon.png \
-            --width 1024 \
-            --height 768 \
-            --hide-title-bar \
-            --use-local-file \
-            --multi-arch \
-            --app-version ${{ env.APP_VERSION }}
-          
-      - name: Locate and copy macOS artifacts
-        run: |
-          echo "=== Finding build artifacts ==="
-          mkdir -p output
-          # pake v3.x 在临时目录构建，产物不在 npm 安装目录
-          # 全局搜索 .dmg，按修改时间排序
-          echo "--- Searching for DMG files ---"
-          FOUND=$(find /tmp "$HOME" "$(npm root -g)" -maxdepth 8 -name "*.dmg" -type f ! -path "*/node_modules/*" 2>/dev/null)
-          if [ -n "$FOUND" ]; then
-            echo "$FOUND" | while read f; do
-              echo "Found: $f"
-              cp -v "$f" output/
-            done
-          else
-            echo "ERROR: No DMG files found!"
-          fi
-          echo "=== Files in output/ ==="
-          ls -laR output/
-          # 确保至少有一个 dmg 文件
-          test -n "$(ls -A output/ 2>/dev/null)" || { echo "FATAL: No artifacts found in output/"; exit 1; }
-          
-      - name: Upload macOS DMGs
+        working-directory: pake-build
+        run: pake --config pake.json --targets dmg --multi-arch --app-version ${{ env.APP_VERSION }}
+
+      - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
           name: macos-dmg
-          path: output/*.dmg
+          path: |
+            pake-build/target/release/bundle/dmg/*.dmg
 
   build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          
+          node-version: '20'
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-          
+        with:
+          targets: x86_64-pc-windows-msvc
+
       - name: Install Pake CLI
         run: npm install -g pake-cli
-        
-      - name: Build Windows EXE
+
+      - name: Apply Chinese menu patch
         shell: pwsh
         run: |
-          pake index.html `
-            --name 小排版 `
-            --targets nsis `
-            --icon icon.png `
-            --width 1024 `
-            --height 768 `
-            --use-local-file `
-            --app-version ${{ env.APP_VERSION }}
-          
-      - name: Locate and copy Windows artifacts
-        shell: pwsh
-        run: |
-          echo "=== Finding build artifacts ==="
-          New-Item -ItemType Directory -Force -Path output
-          $PAKE_DIR = "$(npm root -g)/pake-cli"
-          $TEMP_DIR = $env:TEMP
-          @($PAKE_DIR, "$HOME", $TEMP_DIR) | ForEach-Object {
-            $searchPath = $_
-            Write-Host "Searching in: $searchPath"
-            Get-ChildItem -Path $searchPath -Recurse -Filter "*.exe" -File -ErrorAction SilentlyContinue | ForEach-Object { 
-              Write-Host "Found EXE: $($_.FullName)"
-              Copy-Item -Path $_.FullName -Destination "output/" -Verbose 
-            }
-            Get-ChildItem -Path $searchPath -Recurse -Filter "*.msix" -File -ErrorAction SilentlyContinue | ForEach-Object { 
-              Write-Host "Found MSIX: $($_.FullName)"
-              Copy-Item -Path $_.FullName -Destination "output/" -Verbose 
-            }
+          $GLOBAL_NM = npm root -g
+          $MENU_FILE = "$GLOBAL_NM/pake-cli/src-tauri/src/app/menu.rs"
+          $PATCH_FILE = ".github/patches/menu.rs"
+          if (Test-Path $PATCH_FILE -and Test-Path $MENU_FILE) {
+            Copy-Item $PATCH_FILE $MENU_FILE -Force
+            Write-Host "Menu patch applied"
+          } else {
+            Write-Host "WARNING: Cannot apply menu patch, continuing..."
           }
-          echo "=== Files in output/ ==="
-          Get-ChildItem -Path output/
-          if (-not (Get-ChildItem -Path output/)) { Write-Error "FATAL: No artifacts found"; exit 1 }
-          
+
+      - name: Prepare build files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path pake-build
+          Copy-Item index.html, main.js, favicon.ico, icon.png, icon.ico, pake.json -Destination pake-build -ErrorAction SilentlyContinue
+          Copy-Item -Recurse Images -Destination pake-build\Images -ErrorAction SilentlyContinue
+          Copy-Item -Recurse js -Destination pake-build\js -ErrorAction SilentlyContinue
+
+      - name: Build Windows EXE
+        working-directory: pake-build
+        run: pake --config pake.json --targets nsis --app-version ${{ env.APP_VERSION }}
+
+      - name: Build Windows MSIX
+        working-directory: pake-build
+        run: pake --config pake.json --targets msix --app-version ${{ env.APP_VERSION }}
+
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
         with:
-          name: windows-x86_64-exe
-          path: output/*
+          name: windows-exe
+          path: |
+            pake-build/target/release/bundle/nsis/*.exe
+
+      - name: Upload Windows MSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msix
+          path: |
+            pake-build/target/release/bundle/msix/*.msix
+            pake-build/target/release/bundle/msix/*.msixupload
 
   build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          
+          node-version: '20'
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-          
-      - name: Install system dependencies
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -171,45 +150,39 @@ jobs:
             libappindicator3-dev \
             librsvg2-dev \
             patchelf
-          
+
       - name: Install Pake CLI
         run: npm install -g pake-cli
-        
-      - name: Build Linux DEB
+
+      - name: Apply Chinese menu patch
         run: |
-          pake index.html \
-            --name 小排版 \
-            --targets deb \
-            --icon icon.png \
-            --width 1024 \
-            --height 768 \
-            --use-local-file \
-            --app-version ${{ env.APP_VERSION }}
-          
-      - name: Locate and copy Linux artifacts
-        run: |
-          echo "=== Finding build artifacts ==="
-          mkdir -p output
-          # pake v3.x 在临时目录构建，产物不在 npm 安装目录
-          echo "--- Searching for DEB/AppImage files ---"
-          FOUND=$(find /tmp "$HOME" "$(npm root -g)" -maxdepth 8 \( -name "*.deb" -o -name "*.AppImage" \) -type f ! -path "*/node_modules/*" 2>/dev/null)
-          if [ -n "$FOUND" ]; then
-            echo "$FOUND" | while read f; do
-              echo "Found: $f"
-              cp -v "$f" output/
-            done
+          GLOBAL_NM=$(npm root -g)
+          MENU_FILE="$GLOBAL_NM/pake-cli/src-tauri/src/app/menu.rs"
+          PATCH_FILE=".github/patches/menu.rs"
+          if [ -f "$PATCH_FILE" ] && [ -f "$MENU_FILE" ]; then
+            cp "$PATCH_FILE" "$MENU_FILE"
+            echo "Menu patch applied"
           else
-            echo "ERROR: No DEB or AppImage files found!"
+            echo "WARNING: Cannot apply menu patch, continuing..."
           fi
-          echo "=== Files in output/ ==="
-          ls -laR output/
-          test -n "$(ls -A output/ 2>/dev/null)" || { echo "FATAL: No artifacts found in output/"; exit 1; }
-          
+
+      - name: Prepare build files
+        run: |
+          mkdir -p pake-build
+          cp index.html main.js favicon.ico icon.png icon.icns pake.json pake-build/
+          cp -r Images pake-build/
+          cp -r js pake-build/
+
+      - name: Build Linux DEB
+        working-directory: pake-build
+        run: pake --config pake.json --targets deb --app-version ${{ env.APP_VERSION }}
+
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4
         with:
-          name: linux-x86_64-deb
-          path: output/*
+          name: linux-deb
+          path: |
+            pake-build/target/release/bundle/deb/*.deb
 
   create-release:
     needs: [build-macos, build-windows, build-linux]
@@ -222,32 +195,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          
-      - name: List downloaded artifacts
-        run: find artifacts -type f | head -50
-          
-      - name: Rename artifacts with consistent naming
-        run: |
-          # macOS DMGs
-          for f in artifacts/macos-dmg/*.dmg; do
-            basename=$(basename "$f")
-            # Extract arch from filename (*_aarch64.dmg or *_x64.dmg)
-            if echo "$basename" | grep -q "_aarch64"; then
-              mv "$f" "artifacts/macos-dmg/小排版_${{ env.APP_VERSION }}_aarch64.dmg"
-            elif echo "$basename" | grep -q "_x64"; then
-              mv "$f" "artifacts/macos-dmg/小排版_${{ env.APP_VERSION }}_x64.dmg"
-            fi
-          done
-          
+
+      - name: List artifacts
+        run: find artifacts -type f
+
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
           files: |
             artifacts/macos-dmg/*.dmg
-            artifacts/windows-x86_64-exe/*.exe
-            artifacts/windows-x86_64-exe/*.msix
-            artifacts/linux-x86_64-deb/*.deb
-            artifacts/linux-x86_64-deb/*.AppImage
+            artifacts/windows-exe/*.exe
+            artifacts/windows-msix/*.msix
+            artifacts/windows-msix/*.msixupload
+            artifacts/linux-deb/*.deb
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

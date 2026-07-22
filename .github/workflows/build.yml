@@ -16,7 +16,17 @@ env:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+        include:
+          - arch: x86_64
+            runner: macos-13
+            rust-target: x86_64-apple-darwin
+          - arch: aarch64
+            runner: macos-latest
+            rust-target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v4
       
@@ -28,7 +38,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+          targets: ${{ matrix.rust-target }}
           
       - name: Install Pake CLI
         run: npm install -g pake-cli
@@ -41,14 +51,14 @@ jobs:
           cp -r Images pake-build/
           cp -r js pake-build/
           
-      - name: Build macOS Universal (Intel + Apple Silicon)
+      - name: Build macOS DMG (${{ matrix.arch }})
         working-directory: pake-build
-        run: pake --config pake.json --targets dmg --multi-arch
+        run: pake --config pake.json --targets dmg
           
-      - name: Upload macOS dmg
+      - name: Upload macOS DMG (${{ matrix.arch }})
         uses: actions/upload-artifact@v4
         with:
-          name: macos-universal-dmg
+          name: macos-${{ matrix.arch }}-dmg
           path: |
             pake-build/target/release/bundle/dmg/*.dmg
 
@@ -170,7 +180,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/**/*.dmg
+            artifacts/macos-x86_64-dmg/*.dmg
+            artifacts/macos-aarch64-dmg/*.dmg
             artifacts/**/*.exe
             artifacts/**/*.msix
             artifacts/**/*.msixupload

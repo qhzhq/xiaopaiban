@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build (e.g., 1.5.4)'
+        description: 'Version to build (e.g., 1.5.5)'
         required: true
-        default: '1.5.4'
+        default: '1.5.5'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.4' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.5' }}
 
 jobs:
   build-macos:

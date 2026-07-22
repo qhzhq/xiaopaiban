@@ -12,7 +12,7 @@
 set -e
 
 APP_NAME="小排版"
-APP_VERSION="1.5.4"
+APP_VERSION="1.5.5"
 BUILD_DIR="pake-build"
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 

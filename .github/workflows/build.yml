@@ -9,10 +9,10 @@ on:
       version:
         description: 'Version to build (e.g., 1.5.6)'
         required: true
-        default: '1.5.7'
+        default: '1.5.8'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.7' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.8' }}
 
 jobs:
   build-macos:
@@ -46,9 +46,10 @@ jobs:
       - name: Apply Chinese menu patch
         run: |
           echo "=== Locate pake-cli installation ==="
-          PAKE_DIR="$(dirname $(dirname $(node -e "console.log(require.resolve('pake-cli'))")))"
-          echo "Pake dir: $PAKE_DIR"
-          MENU_FILE="$PAKE_DIR/src-tauri/src/app/menu.rs"
+          # 使用 npm root -g 获取全局 node_modules 路径（兼容所有架构）
+          GLOBAL_NM=$(npm root -g)
+          echo "Global node_modules: $GLOBAL_NM"
+          MENU_FILE="$GLOBAL_NM/pake-cli/src-tauri/src/app/menu.rs"
           PATCH_FILE=".github/patches/menu.rs"
           echo "Target: $MENU_FILE"
           echo "Patch source: $PATCH_FILE"

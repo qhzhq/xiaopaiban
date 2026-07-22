@@ -68,21 +68,21 @@
 
 | 架构 | 格式 | 下载 |
 |:---|:---|:---|
-| Intel (x64) | DMG | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.11_x64.dmg) |
-| Apple Silicon (M1-M4) | DMG | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.11_aarch64.dmg) |
+| Intel (x64) | DMG | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_x64.dmg) |
+| Apple Silicon (M1-M4) | DMG | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_aarch64.dmg) |
 
 ### Windows
 
 | 架构 | 格式 | 下载 |
 |:---|:---|:---|
-| x64 | EXE | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.11_x64-setup.exe) |
-| x64 | MSIX | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.11_x64.msix) |
+| x64 | EXE | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_x64-setup.exe) |
+| x64 | MSIX | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_x64.msix) |
 
 ### Linux
 
 | 架构 | 格式 | 下载 |
 |:---|:---|:---|
-| x64 | DEB | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.11_amd64.deb) |
+| x64 | DEB | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_amd64.deb) |
 
 > 所有安装包均通过 GitHub Actions 自动构建，也可前往 [GitHub Releases](https://github.com/qhzhq/xiaopaiban/releases) 查看全部版本。
 

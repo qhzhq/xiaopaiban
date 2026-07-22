@@ -9,10 +9,10 @@ on:
       version:
         description: 'Version to build (e.g., 1.5.1)'
         required: true
-        default: '1.5.19'
+        default: '1.5.20'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.19' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.20' }}
 
 jobs:
   build-macos:
@@ -78,15 +78,6 @@ jobs:
 
       - name: Install Pake CLI
         run: npm install -g pake-cli
-
-      - name: Disable MSI bundling (Wix broken on CI)
-        shell: pwsh
-        run: |
-          $TAURI_CONF = "$(npm root -g)\pake-cli\src-tauri\.pake\tauri.conf.json"
-          $json = Get-Content $TAURI_CONF -Raw | ConvertFrom-Json
-          $json.tauri.bundle.targets = @("nsis")
-          $json | ConvertTo-Json -Depth 10 | Set-Content $TAURI_CONF
-          Write-Host "Tauri bundle targets set to nsis only"
 
       - name: Build Windows EXE
         shell: pwsh

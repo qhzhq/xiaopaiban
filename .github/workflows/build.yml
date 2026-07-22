@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build (e.g., 1.5.1)'
+        description: 'Version to build (e.g., 1.5.4)'
         required: true
-        default: '1.5.1'
+        default: '1.5.4'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.3' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.4' }}
 
 jobs:
   build-macos:
@@ -43,8 +43,11 @@ jobs:
       - name: Install Pake CLI
         run: npm install -g pake-cli
         
-      - name: Verify Pake
-        run: pake --version
+      - name: Apply custom menu patch
+        run: |
+          PATCH_TARGET="$(dirname $(node -e "console.log(require.resolve('pake-cli'))"))/../src-tauri/src/app/menu.rs"
+          cp .github/patches/menu.rs "$PATCH_TARGET"
+          echo "Patched: $PATCH_TARGET"
         
       - name: Build macOS DMG (${{ matrix.arch }})
         run: |
@@ -55,7 +58,7 @@ jobs:
             --width 1024 \
             --height 768 \
             --fullscreen false \
-            --hide-title-bar false \
+            --hide-title-bar true \
             -v
           
       - name: Upload macOS DMG (${{ matrix.arch }})

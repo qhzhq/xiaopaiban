@@ -12,7 +12,7 @@
 set -e
 
 APP_NAME="小排版"
-APP_VERSION="1.5.1"
+APP_VERSION="1.5.4"
 BUILD_DIR="pake-build"
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
@@ -81,6 +81,7 @@ build_mac() {
 
     local pake_args=(
         "--config" "pake.json"
+        "--hide-title-bar"
         "--targets" "dmg"
     )
 

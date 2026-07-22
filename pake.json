@@ -6,8 +6,8 @@
   "width": 1024,
   "height": 768,
   "useLocalFile": true,
-  "hideTitleBar": false,
+  "hideTitleBar": true,
   "fullscreen": false,
   "multiArch": true,
-  "appVersion": "1.5.1"
+  "appVersion": "1.5.4"
 }

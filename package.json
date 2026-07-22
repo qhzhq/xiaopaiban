@@ -1,6 +1,6 @@
 {
   "name": "小排版",
-  "version": "1.5.14",
+  "version": "1.5.15",
   "description": "一键排版工具 - 文字排版、在线排版、文字自动排版",
   "main": "main.js",
   "scripts": {

@@ -7,64 +7,62 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build (e.g., 1.5.13)'
+        description: 'Version to build (e.g., 1.5.15)'
         required: true
-        default: '1.5.14'
+        default: '1.5.15'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.14' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.15' }}
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+        include:
+          - arch: x86_64
+            runner: macos-14
+            rust-target: x86_64-apple-darwin
+          - arch: aarch64
+            runner: macos-latest
+            rust-target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+          targets: ${{ matrix.rust-target }}
 
       - name: Install Pake CLI
         run: npm install -g pake-cli
 
-      - name: Apply Chinese menu patch (macOS only)
+      - name: Verify Pake
+        run: pake --version
+
+      - name: Build macOS DMG (${{ matrix.arch }})
         run: |
-          set +e
-          GLOBAL_NM=$(npm root -g)
-          MENU_FILE="$GLOBAL_NM/pake-cli/src-tauri/src/app/menu.rs"
-          PATCH_FILE=".github/patches/menu.rs"
-          if [ -f "$PATCH_FILE" ] && [ -f "$MENU_FILE" ]; then
-            cp "$PATCH_FILE" "$MENU_FILE"
-            echo "Menu patch applied"
-          else
-            echo "WARNING: Cannot apply menu patch, continuing..."
-          fi
-          exit 0
+          pake index.html \
+            --name 小排版 \
+            --targets dmg \
+            --icon icon.png \
+            --width 1024 \
+            --height 768 \
+            --use-local-file \
+            --app-version ${{ env.APP_VERSION }}
 
-      - name: Prepare build files
-        run: |
-          mkdir -p pake-build
-          cp index.html main.js favicon.ico icon.png icon.icns pake-build/ 2>/dev/null || true
-          cp pake.json pake-build/
-          cp -r Images pake-build/
-          cp -r js pake-build/
-
-      - name: Build macOS DMG (universal)
-        working-directory: pake-build
-        run: pake --config pake.json --targets dmg --multi-arch --app-version ${{ env.APP_VERSION }}
-
-      - name: Upload macOS DMG
+      - name: Upload macOS DMG (${{ matrix.arch }})
         uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg
+          name: macos-${{ matrix.arch }}-dmg
           path: |
-            pake-build/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/dmg/*.dmg
 
   build-windows:
     runs-on: windows-latest
@@ -74,7 +72,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -84,36 +82,24 @@ jobs:
       - name: Install Pake CLI
         run: npm install -g pake-cli
 
-      - name: Prepare build files
+      - name: Build Windows EXE
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path pake-build
-          Copy-Item index.html, main.js, favicon.ico, icon.png, icon.ico, pake.json -Destination pake-build -ErrorAction SilentlyContinue
-          Copy-Item -Recurse Images -Destination pake-build\Images -ErrorAction SilentlyContinue
-          Copy-Item -Recurse js -Destination pake-build\js -ErrorAction SilentlyContinue
-
-      - name: Build Windows EXE
-        working-directory: pake-build
-        run: pake --config pake.json --targets nsis --app-version ${{ env.APP_VERSION }}
-
-      - name: Build Windows MSIX
-        working-directory: pake-build
-        run: pake --config pake.json --targets msix --app-version ${{ env.APP_VERSION }}
+          pake index.html `
+            --name 小排版 `
+            --targets nsis `
+            --icon icon.png `
+            --width 1024 `
+            --height 768 `
+            --use-local-file `
+            --app-version ${{ env.APP_VERSION }}
 
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
         with:
-          name: windows-exe
+          name: windows-x86_64-exe
           path: |
-            pake-build/target/release/bundle/nsis/*.exe
-
-      - name: Upload Windows MSIX
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-msix
-          path: |
-            pake-build/target/release/bundle/msix/*.msix
-            pake-build/target/release/bundle/msix/*.msixupload
+            src-tauri/target/release/bundle/nsis/*.exe
 
   build-linux:
     runs-on: ubuntu-latest
@@ -123,14 +109,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-gnu
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -143,23 +129,23 @@ jobs:
       - name: Install Pake CLI
         run: npm install -g pake-cli
 
-      - name: Prepare build files
-        run: |
-          mkdir -p pake-build
-          cp index.html main.js favicon.ico icon.png icon.icns pake.json pake-build/
-          cp -r Images pake-build/
-          cp -r js pake-build/
-
       - name: Build Linux DEB
-        working-directory: pake-build
-        run: pake --config pake.json --targets deb --app-version ${{ env.APP_VERSION }}
+        run: |
+          pake index.html \
+            --name 小排版 \
+            --targets deb \
+            --icon icon.png \
+            --width 1024 \
+            --height 768 \
+            --use-local-file \
+            --app-version ${{ env.APP_VERSION }}
 
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4
         with:
-          name: linux-deb
+          name: linux-x86_64-deb
           path: |
-            pake-build/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/deb/*.deb
 
   create-release:
     needs: [build-macos, build-windows, build-linux]
@@ -173,18 +159,17 @@ jobs:
         with:
           path: artifacts
 
-      - name: List artifacts
-        run: find artifacts -type f
+      - name: List downloaded artifacts
+        run: find artifacts -type f | head -50
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/macos-dmg/*.dmg
-            artifacts/windows-exe/*.exe
-            artifacts/windows-msix/*.msix
-            artifacts/windows-msix/*.msixupload
-            artifacts/linux-deb/*.deb
+            artifacts/macos-x86_64-dmg/*.dmg
+            artifacts/macos-aarch64-dmg/*.dmg
+            artifacts/windows-x86_64-exe/*.exe
+            artifacts/linux-x86_64-deb/*.deb
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

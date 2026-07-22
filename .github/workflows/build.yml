@@ -9,10 +9,10 @@ on:
       version:
         description: 'Version to build (e.g., 1.5.1)'
         required: true
-        default: '1.5.17'
+        default: '1.5.18'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.17' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.18' }}
 
 jobs:
   build-macos:
@@ -43,9 +43,6 @@ jobs:
       - name: Install Pake CLI
         run: npm install -g pake-cli
 
-      - name: Verify Pake
-        run: pake --version
-
       - name: Build macOS DMG (${{ matrix.arch }})
         run: |
           pake index.html \
@@ -54,9 +51,8 @@ jobs:
             --icon icon.png \
             --width 1024 \
             --height 768 \
-            --fullscreen false \
-            --hide-title-bar false \
-            -v
+            --use-local-file \
+            --app-version ${{ env.APP_VERSION }}
 
       - name: Upload macOS DMG (${{ matrix.arch }})
         uses: actions/upload-artifact@v4
@@ -92,9 +88,8 @@ jobs:
             --icon icon.png `
             --width 1024 `
             --height 768 `
-            --fullscreen false `
-            --hide-title-bar false `
-            -v
+            --use-local-file `
+            --app-version ${{ env.APP_VERSION }}
 
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
@@ -139,9 +134,8 @@ jobs:
             --icon icon.png \
             --width 1024 \
             --height 768 \
-            --fullscreen false \
-            --hide-title-bar false \
-            -v
+            --use-local-file \
+            --app-version ${{ env.APP_VERSION }}
 
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4

@@ -104,10 +104,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/你的用户名/排版助手.git"
+    "url": "git+https://github.com/qhzhq/xiaopaiban.git"
   },
   "bugs": {
-    "url": "https://github.com/你的用户名/排版助手/issues"
+    "url": "https://github.com/qhzhq/xiaopaiban/issues"
   },
   "devDependencies": {
     "electron": "^34.2.0",

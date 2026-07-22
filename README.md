@@ -66,26 +66,26 @@
 
 ### macOS
 
-| 架构 | 格式 | 大小 |
+| 架构 | 格式 | 下载 |
 |:---|:---|:---|
-| Intel (x64) | [下载 DMG](https://1819573196.share.123pan.cn/123pan/bAlQjv-LNE5) | ~102MB |
-| Intel (x64) | [下载 ZIP](https://1819573196.share.123pan.cn/123pan/bAlQjv-wCsL) | ~101MB |
-| Apple Silicon (M1-M4) | [下载 DMG](https://1819573196.share.123pan.cn/123pan/bAlQjv-u6pL) | ~97MB |
-| Apple Silicon (M1-M4) | [下载 ZIP](https://1819573196.share.123pan.cn/123pan/bAlQjv-FlgL) | ~96MB |
+| Intel (x64) | DMG | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.1_x64.dmg) |
+| Apple Silicon (M1-M4) | DMG | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.1_aarch64.dmg) |
 
 ### Windows
 
-| 架构 | 格式 | 大小 |
+| 架构 | 格式 | 下载 |
 |:---|:---|:---|
-| x64 (Windows 10+) | [下载安装程序](https://1819573196.share.123pan.cn/123pan/bAlQjv-QM8L) | ~79MB |
+| x64 | EXE | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.1_x64-setup.exe) |
+| x64 | MSIX | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.1_x64.msix) |
 
 ### Linux
 
-| 架构 | 格式 | 大小 |
+| 架构 | 格式 | 下载 |
 |:---|:---|:---|
-| x64 | [下载 AppImage](https://1819573196.share.123pan.cn/123pan/bAlQjv-GkbL) | ~105MB |
+| x64 | DEB | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.1_amd64.deb) |
+| ARM64 | DEB | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.1_arm64.deb) |
 
-> 也可通过 [GitHub Releases](https://github.com/qhzhq/xiaopaiban/releases) 下载最新构建版本。
+> 所有安装包均通过 GitHub Actions 自动构建，也可前往 [GitHub Releases](https://github.com/qhzhq/xiaopaiban/releases) 查看全部版本。
 
 ---
 

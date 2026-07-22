@@ -1,5 +1,5 @@
 // Menu functionality is only used on macOS; the module is gated in app/mod.rs.
-use tauri::menu::{AboutMetadata, Menu, PredefinedMenuItem, Submenu};
+use tauri::menu::{Menu, PredefinedMenuItem, Submenu};
 use tauri::{AppHandle, Wry};
 
 pub fn set_app_menu(
@@ -21,16 +21,10 @@ pub fn set_app_menu(
 
 fn app_menu(app: &AppHandle<Wry>) -> tauri::Result<Submenu<Wry>> {
     let app_menu = Submenu::new(app, "小排版", true)?;
-    let about_metadata = AboutMetadata {
-        version: Some("1.5.4".to_string()),
-        authors: Some(vec!["静候美好".to_string()]),
-        comments: Some("hulian.pro".to_string()),
-        ..Default::default()
-    };
     app_menu.append(&PredefinedMenuItem::about(
         app,
         Some("关于 一键排版"),
-        Some(about_metadata),
+        None::<tauri::menu::AboutMetadata>,
     )?)?;
     app_menu.append(&PredefinedMenuItem::separator(app)?)?;
     app_menu.append(&PredefinedMenuItem::services(app, None)?)?;

@@ -45,9 +45,15 @@ jobs:
         
       - name: Apply custom menu patch
         run: |
+          echo "=== Pake installation ==="
+          which pake
+          pake --version
+          echo "=== Patch target path ==="
           PATCH_TARGET="$(dirname $(node -e "console.log(require.resolve('pake-cli'))"))/../src-tauri/src/app/menu.rs"
-          cp .github/patches/menu.rs "$PATCH_TARGET"
-          echo "Patched: $PATCH_TARGET"
+          echo "Target: $PATCH_TARGET"
+          echo "Target exists before patch: $(test -f "$PATCH_TARGET" && echo YES || echo NO)"
+          cp -v .github/patches/menu.rs "$PATCH_TARGET"
+          echo "Patched successfully"
         
       - name: Build macOS DMG (${{ matrix.arch }})
         run: |
@@ -57,8 +63,7 @@ jobs:
             --icon icon.png \
             --width 1024 \
             --height 768 \
-            --fullscreen false \
-            --hide-title-bar true \
+            --hide-title-bar \
             -v
           
       - name: Upload macOS DMG (${{ matrix.arch }})
@@ -95,8 +100,6 @@ jobs:
             --icon icon.png `
             --width 1024 `
             --height 768 `
-            --fullscreen false `
-            --hide-title-bar false `
             -v
           
       - name: Upload Windows EXE
@@ -142,8 +145,6 @@ jobs:
             --icon icon.png \
             --width 1024 \
             --height 768 \
-            --fullscreen false \
-            --hide-title-bar false \
             -v
           
       - name: Upload Linux DEB

@@ -9,10 +9,10 @@ on:
       version:
         description: 'Version to build (e.g., 1.5.13)'
         required: true
-        default: '1.5.13'
+        default: '1.5.14'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.13' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.14' }}
 
 jobs:
   build-macos:
@@ -33,8 +33,9 @@ jobs:
       - name: Install Pake CLI
         run: npm install -g pake-cli
 
-      - name: Apply Chinese menu patch
+      - name: Apply Chinese menu patch (macOS only)
         run: |
+          set +e
           GLOBAL_NM=$(npm root -g)
           MENU_FILE="$GLOBAL_NM/pake-cli/src-tauri/src/app/menu.rs"
           PATCH_FILE=".github/patches/menu.rs"
@@ -44,6 +45,7 @@ jobs:
           else
             echo "WARNING: Cannot apply menu patch, continuing..."
           fi
+          exit 0
 
       - name: Prepare build files
         run: |
@@ -81,19 +83,6 @@ jobs:
 
       - name: Install Pake CLI
         run: npm install -g pake-cli
-
-      - name: Apply Chinese menu patch
-        shell: pwsh
-        run: |
-          $GLOBAL_NM = npm root -g
-          $MENU_FILE = "$GLOBAL_NM/pake-cli/src-tauri/src/app/menu.rs"
-          $PATCH_FILE = ".github/patches/menu.rs"
-          if (Test-Path $PATCH_FILE -and Test-Path $MENU_FILE) {
-            Copy-Item $PATCH_FILE $MENU_FILE -Force
-            Write-Host "Menu patch applied"
-          } else {
-            Write-Host "WARNING: Cannot apply menu patch, continuing..."
-          }
 
       - name: Prepare build files
         shell: pwsh
@@ -153,18 +142,6 @@ jobs:
 
       - name: Install Pake CLI
         run: npm install -g pake-cli
-
-      - name: Apply Chinese menu patch
-        run: |
-          GLOBAL_NM=$(npm root -g)
-          MENU_FILE="$GLOBAL_NM/pake-cli/src-tauri/src/app/menu.rs"
-          PATCH_FILE=".github/patches/menu.rs"
-          if [ -f "$PATCH_FILE" ] && [ -f "$MENU_FILE" ]; then
-            cp "$PATCH_FILE" "$MENU_FILE"
-            echo "Menu patch applied"
-          else
-            echo "WARNING: Cannot apply menu patch, continuing..."
-          fi
 
       - name: Prepare build files
         run: |

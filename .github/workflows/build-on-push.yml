@@ -237,19 +237,19 @@ jobs:
             
             ### 更新内容
             - 自动构建发布
-            - 支持 macOS、Windows、Linux 多平台
+            - 支持 macOS、Windows、Linux 多平台多架构
             
             ### 下载说明
             #### macOS
-            - **Intel (x64)**: 下载 `小排版_${APP_VERSION}_x64.dmg`
-            - **Apple Silicon (M1-M4)**: 下载 `小排版_${APP_VERSION}_aarch64.dmg`
+            - **Intel (x64)**: 下载 `小排版_${{ env.APP_VERSION }}_x64.dmg`
+            - **Apple Silicon (M1-M4)**: 下载 `小排版_${{ env.APP_VERSION }}_aarch64.dmg`
             
             #### Windows
-            - **x64**: 下载 `小排版_${APP_VERSION}_x64-setup.exe`
-            - **ARM64**: 下载 `小排版_${APP_VERSION}_aarch64-setup.exe`
+            - **x64**: 下载 `小排版_${{ env.APP_VERSION }}_x64-setup.exe`
+            - **ARM64**: 下载 `小排版_${{ env.APP_VERSION }}_aarch64-setup.exe`
             
             #### Linux
-            - **x64**: 下载 `小排版_${APP_VERSION}_amd64.deb`
+            - **x64**: 下载 `小排版_${{ env.APP_VERSION }}_amd64.deb`
             
             ### 系统要求
             - macOS 10.15+

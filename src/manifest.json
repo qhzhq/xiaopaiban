@@ -2,8 +2,8 @@
   "name": "小排版",
   "appid": "pro.hulian.pb",
   "description": "一键排版工具 - 文字排版、在线排版、文字自动排版",
-  "versionName": "1.5.18",
-  "versionCode": "1518",
+  "versionName": "2.0.1",
+  "versionCode": "2001",
   "transformPx": false,
   "app-plus": {
     "usingComponents": true,

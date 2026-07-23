@@ -1,6 +1,6 @@
 [package]
 name = "小排版"
-version = "1.5.18"
+version = "2.0.1"
 description = "一键排版工具"
 authors = ["静候美好"]
 license = "MIT"

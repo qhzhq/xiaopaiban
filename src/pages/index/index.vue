@@ -4,7 +4,7 @@
     <view class="titlebar">
       <view class="titlebar-left">
         <text class="app-title">小排版</text>
-        <text class="app-version">v1.5.18</text>
+        <text class="app-version">v2.0.1</text>
       </view>
       <view class="titlebar-right">
         <view class="titlebar-btn" @click="toggleTheme">
@@ -400,7 +400,7 @@
           <view class="about-content">
             <text class="app-logo">📖</text>
             <text class="app-name">小排版</text>
-            <text class="app-version">版本 1.5.18</text>
+            <text class="app-version">版本 2.0.1</text>
             <text class="app-description">一款简洁好用的文本排版工具</text>
             <text class="app-copyright">© 2024-2026 互联网互助联盟</text>
             

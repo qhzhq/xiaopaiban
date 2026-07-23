@@ -6,7 +6,7 @@
 
 set -e
 
-APP_VERSION="1.5.18"
+APP_VERSION="2.0.1"
 APP_NAME="小排版"
 APP_ID="pro.hulian.pb"
 

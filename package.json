@@ -1,6 +1,6 @@
 {
   "name": "xiaopaiban-uniapp-x",
-  "version": "1.5.18",
+  "version": "2.0.1",
   "description": "一键排版工具 - uni-app x版本",
   "main": "src/main.ts",
   "scripts": {
@@ -56,6 +56,7 @@
     "@dcloudio/uni-cli-shared": "3.0.0-alpha-3081220230802001",
     "@dcloudio/uni-stacktracey": "3.0.0-alpha-3081220230802001",
     "@dcloudio/vite-plugin-uni": "3.0.0-alpha-3081220230802001",
+    "@tauri-apps/cli": "^2.0.0",
     "@vue/tsconfig": "^0.4.0",
     "typescript": "^5.1.6",
     "vite": "^4.4.9"

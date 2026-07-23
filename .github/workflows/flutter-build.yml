@@ -60,18 +60,25 @@ jobs:
         run: |
           cd xiaopaiban_flutter/build/macos/Build/Products/Release
           
+          # 查找.app文件
+          APP_NAME=$(ls -d *.app | head -1)
+          if [ -z "$APP_NAME" ]; then
+            echo "Error: No .app found"
+            exit 1
+          fi
+          
           # 创建DMG
           create-dmg \
             --volname "小排版" \
-            --volicon "小排版.app/Contents/Resources/AppIcon.icns" \
+            --volicon "$APP_NAME/Contents/Resources/AppIcon.icns" \
             --window-pos 200 120 \
             --window-size 600 300 \
             --icon-size 100 \
-            --icon "小排版.app" 175 120 \
-            --hide-extension "小排版.app" \
+            --icon "$APP_NAME" 175 120 \
+            --hide-extension "$APP_NAME" \
             --app-drop-link 425 120 \
             "小排版_${APP_VERSION}_macOS_${{ matrix.arch }}.dmg" \
-            "小排版.app"
+            "$APP_NAME"
         env:
           APP_VERSION: ${{ env.APP_VERSION }}
 
@@ -119,6 +126,15 @@ jobs:
           # 添加NSIS到PATH
           echo "C:\Program Files (x86)\NSIS" >> $GITHUB_PATH
 
+      - name: Rename executable for installer
+        run: |
+          # 重命名可执行文件以匹配NSIS脚本中的名称
+          cd xiaopaiban_flutter/build/windows/${{ matrix.arch }}/runner/Release
+          if [ -f "xiaopaiban_flutter.exe" ]; then
+            mv xiaopaiban_flutter.exe 小排版.exe
+          fi
+        shell: bash
+
       - name: Create installer (NSIS)
         run: |
           # 复制NSIS脚本到构建目录
@@ -145,6 +161,8 @@ jobs:
           dart run msix:create --version $MSIX_VERSION --target-platform windows-${{ matrix.arch }}
         env:
           APP_VERSION: ${{ env.APP_VERSION }}
+
+
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -231,7 +249,14 @@ jobs:
           
           # 复制文件
           cp -r $BUILD_DIR/* $DEB_DIR/usr/bin/
-          cp $BUILD_DIR/小排版 $DEB_DIR/usr/bin/xiaopaiban
+          # 查找可执行文件（通常与项目名称相同）
+          EXECUTABLE=$(find $BUILD_DIR -maxdepth 1 -type f -executable | head -1)
+          if [ -n "$EXECUTABLE" ]; then
+            cp "$EXECUTABLE" $DEB_DIR/usr/bin/xiaopaiban
+          else
+            echo "Error: No executable found in $BUILD_DIR"
+            exit 1
+          fi
           chmod +x $DEB_DIR/usr/bin/xiaopaiban
           
           # 创建桌面文件

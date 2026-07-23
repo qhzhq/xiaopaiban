@@ -1,4 +1,4 @@
-name: Build All Platforms
+name: Build All Platforms (Tauri)
 
 on:
   push:
@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build (e.g., 1.5.1)'
+        description: 'Version to build (e.g., 1.5.18)'
         required: true
-        default: '1.5.20'
+        default: '1.5.18'
 
 env:
-  APP_VERSION: ${{ github.event.inputs.version || '1.5.20' }}
+  APP_VERSION: ${{ github.event.inputs.version || '1.5.18' }}
 
 jobs:
   build-macos:
@@ -40,19 +40,11 @@ jobs:
         with:
           targets: ${{ matrix.rust-target }}
 
-      - name: Install Pake CLI
-        run: npm install -g pake-cli
+      - name: Install dependencies
+        run: npm install
 
       - name: Build macOS DMG (${{ matrix.arch }})
-        run: |
-          pake index.html \
-            --name 小排版 \
-            --targets dmg \
-            --icon icon.png \
-            --width 1024 \
-            --height 768 \
-            --use-local-file \
-            --app-version ${{ env.APP_VERSION }}
+        run: npm run build:mac
 
       - name: Upload macOS DMG (${{ matrix.arch }})
         uses: actions/upload-artifact@v4
@@ -76,22 +68,11 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
-      - name: Install Pake CLI
-        run: npm install -g pake-cli
+      - name: Install dependencies
+        run: npm install
 
       - name: Build Windows EXE
-        shell: pwsh
-        run: |
-          pake index.html `
-            --name 小排版 `
-            --targets nsis `
-            --icon icon.png `
-            --width 1024 `
-            --height 768 `
-            --fullscreen false `
-            --hide-title-bar false `
-            --use-local-file `
-            --app-version ${{ env.APP_VERSION }}
+        run: npm run build:win
 
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
@@ -125,19 +106,11 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Install Pake CLI
-        run: npm install -g pake-cli
+      - name: Install dependencies
+        run: npm install
 
       - name: Build Linux DEB
-        run: |
-          pake index.html \
-            --name 小排版 \
-            --targets deb \
-            --icon icon.png \
-            --width 1024 \
-            --height 768 \
-            --use-local-file \
-            --app-version ${{ env.APP_VERSION }}
+        run: npm run build:linux
 
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4

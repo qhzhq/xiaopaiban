@@ -1,0 +1,333 @@
+name: Build on Push
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    # 可选：忽略特定文件的变更
+    # paths-ignore:
+    #   - '*.md'
+    #   - 'docs/**'
+  # 可选：允许手动触发
+  workflow_dispatch:
+    inputs:
+      build_platform:
+        description: '要构建的平台 (mac/win/linux/all)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - mac
+          - win
+          - linux
+
+# 环境变量
+env:
+  APP_VERSION: "1.5.18"
+  APP_NAME: "小排版"
+  APP_ID: "pro.hulian.pb"
+  # 使用最新稳定版 Node.js
+  NODE_VERSION: "node"
+
+jobs:
+  # 代码检查作业
+  lint:
+    name: 代码检查
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行代码检查（如果有）
+        run: |
+          if npm run lint --if-present; then
+            echo "✅ 代码检查通过"
+          else
+            echo "⚠️ 未找到 lint 脚本或检查失败，继续构建"
+          fi
+
+  # 构建作业 - 使用矩阵策略构建不同平台和架构
+  build:
+    name: 构建 ${{ matrix.platform }} ${{ matrix.arch }} 版本
+    needs: lint
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS 构建变体
+          - platform: macos
+            arch: x86_64
+            runner: macos-13
+            rust_target: x86_64-apple-darwin
+            build_script: build:mac:x86_64
+            artifact_name: macOS-x86_64-DMG
+            artifact_pattern: '*.dmg'
+            bundle_path: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg
+
+          - platform: macos
+            arch: aarch64
+            runner: macos-latest
+            rust_target: aarch64-apple-darwin
+            build_script: build:mac:aarch64
+            artifact_name: macOS-aarch64-DMG
+            artifact_pattern: '*.dmg'
+            bundle_path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg
+
+          # Windows 构建变体
+          - platform: windows
+            arch: x86_64
+            runner: windows-latest
+            rust_target: x86_64-pc-windows-msvc
+            build_script: build:win:x86_64
+            artifact_name: Windows-x86_64-EXE
+            artifact_pattern: '*.exe'
+            bundle_path: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis
+
+          - platform: windows
+            arch: aarch64
+            runner: windows-latest
+            rust_target: aarch64-pc-windows-msvc
+            build_script: build:win:aarch64
+            artifact_name: Windows-aarch64-EXE
+            artifact_pattern: '*.exe'
+            bundle_path: src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis
+
+          # Linux 构建变体
+          - platform: linux
+            arch: x86_64
+            runner: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+            build_script: build:linux
+            artifact_name: Linux-x86_64-DEB
+            artifact_pattern: '*.deb'
+            bundle_path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 安装 Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: 缓存 Rust 依赖
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.arch }}-cargo-
+            ${{ runner.os }}-cargo-
+
+      - name: 安装系统依赖 (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: 安装系统依赖 (Windows ARM64)
+        if: matrix.platform == 'windows' && matrix.arch == 'aarch64'
+        run: |
+          # 安装 ARM64 交叉编译工具链
+          rustup target add aarch64-pc-windows-msvc
+        shell: bash
+
+      - name: 安装 npm 依赖
+        run: npm ci
+
+      - name: 构建 ${{ matrix.platform }} ${{ matrix.arch }} 版本
+        run: npm run ${{ matrix.build_script }}
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+
+      - name: 查找构建产物
+        id: find_artifacts
+        shell: bash
+        run: |
+          echo "🔍 查找构建产物..."
+          echo "构建目录内容:"
+          find ${{ matrix.bundle_path }} -name "${{ matrix.artifact_pattern }}" -type f 2>/dev/null || echo "未找到匹配的文件"
+          
+          # 获取产物路径
+          ARTIFACT_PATH=$(find ${{ matrix.bundle_path }} -name "${{ matrix.artifact_pattern }}" -type f | head -1)
+          if [ -n "$ARTIFACT_PATH" ]; then
+            echo "✅ 找到构建产物: $ARTIFACT_PATH"
+            echo "artifact_path=$ARTIFACT_PATH" >> $GITHUB_OUTPUT
+            echo "artifact_name=$(basename "$ARTIFACT_PATH")" >> $GITHUB_OUTPUT
+          else
+            echo "❌ 未找到构建产物"
+            exit 1
+          fi
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ steps.find_artifacts.outputs.artifact_path }}
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: 显示构建结果
+        shell: bash
+        run: |
+          echo "========================================"
+          echo "✅ ${{ matrix.platform }} ${{ matrix.arch }} 版本构建完成"
+          echo "========================================"
+          echo "📦 产物名称: ${{ steps.find_artifacts.outputs.artifact_name }}"
+          echo "📁 产物路径: ${{ steps.find_artifacts.outputs.artifact_path }}"
+          echo "🏷️ 版本号: ${{ env.APP_VERSION }}"
+          echo "========================================"
+
+  # 创建发布版本（仅在推送标签时触发）
+  release:
+    name: 创建发布版本
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 下载所有构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 列出所有构建产物
+        run: |
+          echo "📦 所有构建产物:"
+          find artifacts -type f | sort
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "v${{ env.APP_VERSION }}"
+          body: |
+            ## 🚀 小排版 v${{ env.APP_VERSION }}
+            
+            ### 更新内容
+            - 自动构建发布
+            - 支持 macOS、Windows、Linux 多平台多架构
+            
+            ### 下载说明
+            #### macOS
+            - **Intel (x64)**: 下载 `小排版_${{ env.APP_VERSION }}_x64.dmg`
+            - **Apple Silicon (M1-M4)**: 下载 `小排版_${{ env.APP_VERSION }}_aarch64.dmg`
+            
+            #### Windows
+            - **x64**: 下载 `小排版_${{ env.APP_VERSION }}_x64-setup.exe`
+            - **ARM64**: 下载 `小排版_${{ env.APP_VERSION }}_aarch64-setup.exe`
+            
+            #### Linux
+            - **x64**: 下载 `小排版_${{ env.APP_VERSION }}_amd64.deb`
+            
+            ### 系统要求
+            - macOS 10.15+
+            - Windows 10+
+            - Ubuntu 20.04+ 或其他现代 Linux 发行版
+            
+            ### 安装说明
+            - **macOS**: 双击 `.dmg` 文件，将应用拖到 Applications 文件夹
+            - **Windows**: 双击 `.exe` 文件运行安装程序
+            - **Linux**: 使用 `sudo dpkg -i *.deb` 安装
+          files: |
+            artifacts/macOS-x86_64-DMG/*.dmg
+            artifacts/macOS-aarch64-DMG/*.dmg
+            artifacts/Windows-x86_64-EXE/*.exe
+            artifacts/Windows-aarch64-EXE/*.exe
+            artifacts/Linux-x86_64-DEB/*.deb
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 显示发布结果
+        run: |
+          echo "========================================"
+          echo "✅ 发布版本创建完成"
+          echo "========================================"
+          echo "🏷️ 版本: v${{ env.APP_VERSION }}"
+          echo "📝 发布说明已生成"
+          echo "========================================"
+
+  # 构建状态通知
+  notify:
+    name: 构建状态通知
+    needs: [build, release]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: 检查构建状态
+        run: |
+          echo "========================================"
+          echo "📊 构建状态报告"
+          echo "========================================"
+          
+          # 检查各个作业的状态
+          if [ "${{ needs.build.result }}" == "success" ]; then
+            echo "✅ 构建作业: 成功"
+          else
+            echo "❌ 构建作业: 失败"
+          fi
+          
+          if [ "${{ needs.release.result }}" == "success" ]; then
+            echo "✅ 发布作业: 成功"
+          elif [ "${{ needs.release.result }}" == "skipped" ]; then
+            echo "⏭️ 发布作业: 跳过（非标签推送）"
+          else
+            echo "❌ 发布作业: 失败"
+          fi
+          
+          echo "========================================"
+          echo "🔗 详细日志请查看 GitHub Actions 页面"
+          echo "========================================"
+
+      - name: 构建失败时输出详细信息
+        if: failure()
+        run: |
+          echo "========================================"
+          echo "❌ 构建失败排查指南"
+          echo "========================================"
+          echo "1. 检查依赖安装是否成功"
+          echo "2. 查看具体错误日志"
+          echo "3. 确认构建脚本是否正确"
+          echo "4. 检查系统依赖是否完整"
+          echo "5. 确认 Rust 目标架构是否正确安装"
+          echo "========================================"
+          echo "💡 常见问题解决方案:"
+          echo "  - 依赖安装失败: 检查网络连接或包管理器配置"
+          echo "  - 构建超时: 增加 timeout-minutes 或优化构建过程"
+          echo "  - 权限问题: 检查 secrets 配置"
+          echo "  - 交叉编译失败: 确保目标架构已添加到 Rust 工具链"
+          echo "========================================"

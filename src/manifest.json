@@ -1,0 +1,64 @@
+{
+  "name": "小排版",
+  "appid": "pro.hulian.pb",
+  "description": "一键排版工具 - 文字排版、在线排版、文字自动排版",
+  "versionName": "1.5.18",
+  "versionCode": "1518",
+  "transformPx": false,
+  "app-plus": {
+    "usingComponents": true,
+    "nvueStyleCompiler": "uni-app",
+    "compilerVersion": 3,
+    "splashscreen": {
+      "alwaysShowBeforeRender": true,
+      "waiting": true,
+      "autoclose": true,
+      "delay": 0
+    },
+    "modules": {},
+    "distribute": {
+      "android": {
+        "permissions": [
+          "<uses-permission android:name=\"android.permission.INTERNET\"/>"
+        ]
+      },
+      "ios": {},
+      "sdkConfigs": {}
+    }
+  },
+  "quickapp": {},
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false
+    },
+    "usingComponents": true
+  },
+  "mp-alipay": {
+    "usingComponents": true
+  },
+  "mp-baidu": {
+    "usingComponents": true
+  },
+  "mp-toutiao": {
+    "usingComponents": true
+  },
+  "uniStatistics": {
+    "enable": false
+  },
+  "h5": {
+    "title": "小排版 - 一键排版工具",
+    "template": "",
+    "router": {
+      "mode": "hash",
+      "base": "./"
+    },
+    "async": {
+      "loading": "AsyncLoading",
+      "error": "AsyncError",
+      "delay": 200,
+      "timeout": 60000
+    },
+    "sdkConfigs": {}
+  }
+}

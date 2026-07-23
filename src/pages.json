@@ -1,0 +1,36 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "小排版",
+        "navigationBarBackgroundColor": "#f5f5f7",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#f5f5f7",
+        "backgroundTextStyle": "dark"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "小排版",
+    "navigationBarBackgroundColor": "#f5f5f7",
+    "backgroundColor": "#f5f5f7",
+    "backgroundTextStyle": "dark",
+    "app-plus": {
+      "titleNView": false
+    }
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#007aff",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "排版"
+      }
+    ]
+  }
+}

@@ -1,158 +1,202 @@
-<div align="center">
-  <img src="icon.png" width="120" height="120" alt="小排版 Logo">
-  <h1 align="center">小排版（一键排版）</h1>
-  <p align="center">
-    <strong>让文字呼吸 · 免费 · 离线 · 跨平台</strong>
-  </p>
-  <p align="center">
-    一款专注于中文排文本版的轻量级桌面工具，强调隐私（离线）、便捷（一键操作）和跨平台支持。
-  </p>
-  <p align="center">
-    <a href="https://pb.hulian.pro" target="_blank">🌐 产品官网</a>
-    ·
-    <a href="#-功能特性">📖 功能特性</a>
-    ·
-    <a href="#-快速上手">🚀 快速上手</a>
-    ·
-    <a href="#-下载安装">⬇️ 下载安装</a>
-  </p>
-  <p align="center">
-    <img src="https://img.shields.io/badge/macOS-Intel%20%7C%20Silicon-brightgreen">
-    <img src="https://img.shields.io/badge/Windows-10%2B-blue">
-    <img src="https://img.shields.io/badge/Linux-x64%20%7C%20arm64-orange">
-    <img src="https://img.shields.io/badge/license-MIT-green">
-  </p>
-</div>
+# 小排版 - uni-app x 版本
 
----
+一款简洁好用的文本排版工具，基于 uni-app x 框架开发。
 
-## 📖 功能特性
+## 功能特性
 
-### 六项精密排版能力
+- 📝 **智能排版**：段落缩进、空行调整、换行处理
+- 🔄 **全角半角**：数字、字母、标点、空格的全角半角转换
+- ✏️ **标点修正**：多种标点符号修正模式
+- 〰️ **波浪线修正**：波浪线与破折号的智能转换
+- 🎨 **主题切换**：亮色、暗色、自动主题
+- ⚙️ **预设配置**：小说投稿、论文排版、公众号等预设
+- 💾 **导入导出**：支持TXT、Markdown、HTML格式
+- ⌨️ **快捷键**：常用操作快捷键支持
+- 📊 **统计信息**：字数、行数、段落统计
 
-| 功能 | 说明 |
-|------|------|
-| **段落智能空行** | 自动识别自然段边界，可预设小说投稿、公众号、论文等场景的段落间距 |
-| **缩进一键统一** | 支持文本缩进、全角缩进或不缩进，三种模式自由切换 |
-| **全角半角转换** | 支持中文全角、英文半角或智能混排，统一标点、数字、字母规则 |
-| **中英文混排优化** | 自动在中英文、数字与中文之间插入合适空格，符合 W3C 中文排版规范 |
-| **全局快捷键** | macOS 按 <kbd>⌘G</kbd> / Windows 按 <kbd>Ctrl+G</kbd> 即时排版 |
-| **纯离线引擎** | 100% 本地运算，文字不上传服务器，无隐私风险 |
+## 技术栈
 
-### 更多细节
+- **框架**: uni-app x (Vue 3 + TypeScript)
+- **状态管理**: Pinia
+- **构建工具**: Vite
+- **跨平台**: 支持 H5、微信小程序、支付宝小程序等多个平台
 
-- **标点与空格**：自动处理全角/半角标点、数字、字母的混用错误；中英文之间自动插入空格
-- **段落与缩进**：智能识别段落边界，提供段落间距预设；统一管理缩进格式
-- **预设方案**：通用排版、论文排版、新闻排版、日常排版，一键切换
-- **安全性**：永远不上传你的文字，纯本地处理
-- **零学习成本**：无需注册、配置，打开即用
-- **免费、无广告、无数据收集**
+## 项目结构
 
----
-
-## 🚀 快速上手
-
-1. **粘贴文本**：将文章、小说、笔记或论文粘贴到编辑区，也支持直接拖入 `.txt` 文件
-2. **选择规则**：点击排版设置，选择段落模式、缩进方式和全角半角偏好，或用预设一键配置
-3. **一键排版**：按 <kbd>⌘G</kbd>（macOS）/ <kbd>Ctrl+G</kbd>（Windows/Linux），或点击排版按钮，结果即刻呈现
-
-> 💡 **小技巧**：开启「排版后直接复制」选项，排完版自动复制到剪贴板，省去手动选中步骤。
-
----
-
-## ⬇️ 下载安装
-
-桌面客户端免费、无广告、完全离线，原生比网页版更稳定。
-
-### macOS
-
-| 架构 | 格式 | 下载 |
-|:---|:---|:---|
-| Intel (x64) | DMG | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_x64.dmg) |
-| Apple Silicon (M1-M4) | DMG | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_aarch64.dmg) |
-
-### Windows
-
-| 架构 | 格式 | 下载 |
-|:---|:---|:---|
-| x64 | EXE | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_x64-setup.exe) |
-| x64 | MSIX | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_x64.msix) |
-
-### Linux
-
-| 架构 | 格式 | 下载 |
-|:---|:---|:---|
-| x64 | DEB | [下载](https://github.com/qhzhq/xiaopaiban/releases/latest/download/小排版_1.5.15_amd64.deb) |
-
-> 所有安装包均通过 GitHub Actions 自动构建，也可前往 [GitHub Releases](https://github.com/qhzhq/xiaopaiban/releases) 查看全部版本。
-
----
-
-## 🔧 首次使用注意事项
-
-### macOS
-
-```bash
-# 如果提示"无法打开"，请右键点击 App → 打开
-# 或在终端执行：
-xattr -cr /Applications/小排版.app
+```
+uniapp-x-project/
+├── src/
+│   ├── pages/          # 页面目录
+│   │   └── index/      # 主页面
+│   ├── components/     # 组件目录
+│   ├── store/          # 状态管理
+│   ├── utils/          # 工具函数
+│   ├── types/          # 类型定义
+│   ├── static/         # 静态资源
+│   ├── App.vue         # 应用入口
+│   ├── main.ts         # 主入口
+│   ├── manifest.json   # 应用配置
+│   └── pages.json      # 页面配置
+├── package.json        # 项目配置
+├── vite.config.ts      # Vite配置
+├── tsconfig.json       # TypeScript配置
+└── index.html          # HTML入口
 ```
 
-### Linux
+## 快速开始
+
+### 安装依赖
 
 ```bash
-# 下载后赋予执行权限
-chmod +x 小排版-*.AppImage
-./小排版-*.AppImage
+npm install
 ```
 
----
-
-## 🏗️ 自行构建
-
-### 环境要求
-
-- Node.js 20+
-- Rust（用于 Pake CLI）
-- Pake CLI：`npm install -g pake-cli`
-
-### 构建命令
+### 开发模式
 
 ```bash
-# macOS（Intel + Apple Silicon 通用）
-npm run pake:mac:universal
+# H5端开发
+npm run dev:h5
 
-# 或单独构建
-npm run pake:mac
+# 微信小程序开发
+npm run dev:mp-weixin
 
-# Windows
-npm run pake:win
-
-# Linux
-npm run pake:linux
-
-# 所有平台
-npm run pake:all
+# 支付宝小程序开发
+npm run dev:mp-alipay
 ```
 
----
+### 构建发布
 
-## 🧩 技术栈
+```bash
+# H5端构建
+npm run build:h5
 
-- **前端**：HTML + CSS + JavaScript（layui）
-- **桌面化**：[Pake](https://github.com/tw93/Pake)（基于 Tauri）
-- **CI/CD**：GitHub Actions
+# 微信小程序构建
+npm run build:mp-weixin
 
----
+# 支付宝小程序构建
+npm run build:mp-alipay
+```
 
-## 📄 开源协议
+## 功能说明
 
-本项目基于 [MIT License](LICENSE) 开源。
+### 排版设置
 
----
+1. **段首缩进**：设置段落开头的空格数量（0-8个字符）
+2. **段间空行**：设置段落之间的空行数量（0-3行）
+3. **段内换行**：设置段落内的换行模式（1-5种模式）
+4. **全角半角**：选择需要转换的字符类型
+5. **标点修正**：选择标点符号修正模式
+6. **波浪线修正**：选择波浪线转换模式
 
-<div align="center">
-  <sub>Made with ❤️ by 静候美好</sub>
-  <br>
-  <sub>产品官网：<a href="https://pb.hulian.pro">pb.hulian.pro</a></sub>
-</div>
+### 快速预设
+
+- **小说投稿**：适合小说投稿的排版格式
+- **论文排版**：学术论文标准排版格式
+- **公众号排版**：微信公众号文章排版
+- **纯文本清理**：清理多余空格和特殊字符
+- **代码注释**：代码注释格式化
+
+### 主题模式
+
+- **亮色模式**：适合白天使用
+- **暗色模式**：适合夜间使用
+- **自动模式**：跟随系统设置自动切换
+
+## 快捷键
+
+- `Ctrl/Cmd + Enter`：开始排版
+- `Ctrl/Cmd + C`：复制结果
+- `Ctrl/Cmd + Z`：撤销操作
+- `Ctrl/Cmd + S`：保存设置
+- `Esc`：关闭弹窗
+
+## 支持平台
+
+### H5端
+- 完整功能支持
+- 文件导入导出
+- 键盘快捷键
+
+### 微信小程序
+- 核心排版功能
+- 设置持久化
+- 分享功能
+
+### 其他小程序
+- 支付宝小程序
+- 百度小程序
+- 字节跳动小程序
+- QQ小程序
+- 快手小程序
+- 京东小程序
+- 360小程序
+
+### App端
+- 完整功能支持
+- 原生性能
+- 离线使用
+
+## 开发说明
+
+### 添加新功能
+
+1. 在 `src/types/index.ts` 中定义类型
+2. 在 `src/store/index.ts` 中添加状态和方法
+3. 在 `src/utils/index.ts` 中添加工具函数
+4. 在页面组件中实现UI和交互
+
+### 修改样式
+
+1. 全局样式在 `src/App.vue` 中定义
+2. 页面样式在对应的 `.vue` 文件中定义
+3. 使用CSS变量实现主题切换
+
+### 状态管理
+
+使用 Pinia 进行状态管理，主要状态包括：
+
+- `settings`：排版设置
+- `text`：输入文本
+- `result`：排版结果
+- `stats`：统计信息
+- `history`：历史记录
+
+## 常见问题
+
+### Q: 如何自定义预设？
+A: 在设置面板中选择"自定义"预设，然后调整各项参数，设置会自动保存。
+
+### Q: 如何导入文件？
+A: 点击工具栏的"导入"按钮，可以选择从剪贴板导入或从文件导入（H5端支持）。
+
+### Q: 如何切换主题？
+A: 点击标题栏的主题图标，或在设置面板中选择主题模式。
+
+### Q: 数据会保存在哪里？
+A: 所有设置和历史记录都保存在本地存储中，不会上传到服务器。
+
+## 更新日志
+
+### v1.5.18
+- 迁移到 uni-app x 框架
+- 优化排版算法
+- 改进用户界面
+- 增加更多预设配置
+
+### v1.5.17
+- 修复已知问题
+- 优化性能
+
+## 许可证
+
+MIT License
+
+## 联系方式
+
+- 官方网站：https://hulian.pro
+- 开源地址：https://github.com/qhzhq/xiaopaiban
+- 问题反馈：https://github.com/qhzhq/xiaopaiban/issues
+
+## 致谢
+
+感谢所有为这个项目做出贡献的人！

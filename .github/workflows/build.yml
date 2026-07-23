@@ -55,8 +55,7 @@ jobs:
             --width 1024 \
             --height 768 \
             --fullscreen false \
-            --hide-title-bar false \
-            -v
+            --hide-title-bar false
 
       - name: Upload macOS DMG (${{ matrix.arch }})
         uses: actions/upload-artifact@v4
@@ -93,8 +92,7 @@ jobs:
             --width 1024 `
             --height 768 `
             --fullscreen false `
-            --hide-title-bar false `
-            -v
+            --hide-title-bar false
 
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
@@ -140,8 +138,7 @@ jobs:
             --width 1024 \
             --height 768 \
             --fullscreen false \
-            --hide-title-bar false \
-            -v
+            --hide-title-bar false
 
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4
